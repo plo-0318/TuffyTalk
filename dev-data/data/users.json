@@ -1,0 +1,61 @@
+[
+  {
+    "_id": "6323c9bf032f765facc548a5",
+    "profilePicture": "user-placeholder.png",
+    "gender": "noPref",
+    "bookmarks": [],
+    "likedPosts": [],
+    "comments": [],
+    "role": "admin",
+    "createdAt": 1663289664508,
+    "username": "jack",
+    "email": "jack@test.com",
+    "password": "$2b$12$vYLGQfhyDvi7qGvHd38Xe.g3VvqDfe9jE.v/nfDEauodHG3.e0Zlu",
+    "updatedAt": 1663391622223
+  },
+  {
+    "_id": "63255756078b974ab09c7ae6",
+    "profilePicture": "user-placeholder.png",
+    "gender": "noPref",
+    "bookmarks": [],
+    "likedPosts": [],
+    "comments": ["63256af5b65ff12c902fe955", "6325604845f3586ff42f2c03"],
+    "role": "user",
+    "createdAt": 1663391471051,
+    "username": "cece",
+    "email": "cece@test.com",
+    "password": "$2b$12$3q//hm1a7v2vZugbaL4I2.5xSakcZ2.FwgvohMOve.vM3tyvnOWW6",
+    "posts": ["632555a768c2e3877c00c9e9", "632555d668c2e3877c00c9eb"],
+    "updatedAt": 1663397324697
+  },
+  {
+    "_id": "6325575d078b974ab09c7ae9",
+    "profilePicture": "user-placeholder.png",
+    "gender": "noPref",
+    "bookmarks": [],
+    "likedPosts": [],
+    "comments": ["63256ae7b65ff12c902fe951", "6325602b45f3586ff42f2bfd"],
+    "role": "user",
+    "createdAt": 1663391471051,
+    "username": "dodo",
+    "email": "dodo@test.com",
+    "password": "$2b$12$HrN1phSzhj5O6gz2/cZ8n.N0cEqF0M/Sq8CxLhz16oGUNcql1qU9m",
+    "posts": ["632555e668c2e3877c00c9ed"],
+    "updatedAt": 1663397242034
+  },
+  {
+    "_id": "63255767078b974ab09c7aec",
+    "profilePicture": "user-placeholder.png",
+    "gender": "noPref",
+    "bookmarks": [],
+    "likedPosts": [],
+    "comments": [],
+    "role": "user",
+    "createdAt": 1663391471051,
+    "username": "sharoon",
+    "email": "sharoon@test.com",
+    "password": "$2b$12$X7haX4FnPfOgx681CPJOCeJNN0yTpD8FJg78C/xAtp2DuzTMR/Eu.",
+    "posts": ["6325555707e7ae37c4a133a4"],
+    "updatedAt": 1663397353076
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "_id": "6325602b45f3586ff42f2bfd",
+    "images": [],
+    "likes": 1,
+    "comments": [],
+    "createdAt": 1663393822486,
+    "author": "6325575d078b974ab09c7ae9",
+    "fromPost": "6325555707e7ae37c4a133a4",
+    "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+  },
+  {
+    "_id": "6325604845f3586ff42f2c03",
+    "images": [],
+    "likes": 8,
+    "comments": ["63256ae7b65ff12c902fe951", "63256af5b65ff12c902fe955"],
+    "createdAt": 1663393822486,
+    "author": "63255756078b974ab09c7ae6",
+    "fromPost": "6325555707e7ae37c4a133a4",
+    "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+  },
+  {
+    "_id": "63256ae7b65ff12c902fe951",
+    "images": [],
+    "likes": 0,
+    "comments": [],
+    "parentComment": "6325604845f3586ff42f2c03",
+    "createdAt": 1663396530305,
+    "author": "6325575d078b974ab09c7ae9",
+    "fromPost": "6325555707e7ae37c4a133a4",
+    "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+  },
+  {
+    "_id": "63256af5b65ff12c902fe955",
+    "images": [],
+    "likes": 2,
+    "comments": [],
+    "parentComment": "6325604845f3586ff42f2c03",
+    "createdAt": 1663396530305,
+    "author": "63255756078b974ab09c7ae6",
+    "fromPost": "6325555707e7ae37c4a133a4",
+    "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+  }
+]

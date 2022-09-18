@@ -1,0 +1,44 @@
+[
+  {
+    "_id": "632290fbd7f7d95f34b6594f",
+    "posts": [],
+    "icon": "icon-topic-default.jpg",
+    "name": "psychology"
+  },
+  {
+    "_id": "6325534007e7ae37c4a1338c",
+    "posts": ["632555a768c2e3877c00c9e9", "6325555707e7ae37c4a133a4"],
+    "icon": "topic-placeholder.png",
+    "name": "General"
+  },
+  {
+    "_id": "6325536107e7ae37c4a1338e",
+    "posts": ["632555e668c2e3877c00c9ed", "632555d668c2e3877c00c9eb"],
+    "icon": "topic-placeholder.png",
+    "name": "Comp-Sci"
+  },
+  {
+    "_id": "6325536a07e7ae37c4a13390",
+    "posts": [],
+    "icon": "topic-placeholder.png",
+    "name": "Engineering"
+  },
+  {
+    "_id": "6325537607e7ae37c4a13392",
+    "posts": [],
+    "icon": "topic-placeholder.png",
+    "name": "Math"
+  },
+  {
+    "_id": "6325538207e7ae37c4a13394",
+    "posts": [],
+    "icon": "topic-placeholder.png",
+    "name": "Psychology"
+  },
+  {
+    "_id": "6325538907e7ae37c4a13396",
+    "posts": [],
+    "icon": "topic-placeholder.png",
+    "name": "Accounting"
+  }
+]

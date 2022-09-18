@@ -1,0 +1,190 @@
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+const crypto = require('crypto');
+
+function validatePassword(val) {
+  const containsChar = /[a-zA-Z]/.test(val);
+  const containsNum = /\d/.test(val);
+
+  return containsChar && containsNum;
+}
+
+function validateEmail(val) {
+  const re =
+    /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
+
+  return val.toLowerCase().match(re);
+}
+
+const userSchema = mongoose.Schema({
+  username: {
+    type: String,
+    unique: true,
+    required: [true, 'A user must have an username.'],
+    maxLength: [20, 'A username cannot exceeds 20 characters'],
+    minLength: [1, 'A username cannot be empty'],
+    trim: true,
+  },
+  email: {
+    type: String,
+    validate: {
+      validator: validateEmail,
+      message: 'Incorrect email format.',
+    },
+  },
+  password: {
+    type: String,
+    maxLength: [128, 'A password cannot exceeds 128 characters'],
+    minLength: [8, 'A password should be at least 8 characters.'],
+    validate: {
+      validator: validatePassword,
+      message:
+        'Password needs to contain at least 1 character and at least 1 number',
+    },
+  },
+  profilePicture: {
+    type: String,
+    default: 'user-placeholder.png',
+  },
+  gender: {
+    type: String,
+    default: 'noPref',
+    enum: {
+      values: ['male', 'female', 'noPref'],
+      messages: "A user's gender is either male, female, or noPref",
+    },
+  },
+  bookmarks: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Post',
+    },
+  ],
+  likedPosts: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Post',
+    },
+  ],
+  comments: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Comment',
+    },
+  ],
+  posts: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Post',
+    },
+  ],
+  role: {
+    type: String,
+    default: 'user',
+    enum: {
+      values: ['user', 'admin'],
+      message: "A user's role is either user or admin",
+    },
+  },
+  createdAt: {
+    type: Date,
+    default: new Date(),
+  },
+  updatedAt: Date,
+  passwordChangedAt: Date,
+  passwordResetToken: String,
+  passwordResetTokenExpiresIn: Date,
+});
+
+/////////////////////////
+// DOCUMENT MIDDLEWARE///
+/////////////////////////
+
+// Encrypt password before saving to database, update passwordChangedAt
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) {
+    return next();
+  }
+
+  if (!this.isNew) {
+    this.passwordChangedAt = Date.now() - 1000;
+  }
+
+  this.password = await bcrypt.hash(this.password, 12);
+
+  next();
+});
+
+/////////////////////////
+// QUERY MIDDLEWARE//////
+/////////////////////////
+
+// Popultate referenced fields
+userSchema.pre(/^find/, function (next) {
+  /* this.populate({
+    path: 'bookmarks',
+    // select: '',
+  })
+    .populate({
+      path: 'likedPosts',
+      // select: '',
+    })
+    .populate({
+      path: 'comments',
+      // select: ''
+    }); */
+
+  next();
+});
+
+// Update updatedAt when document is modified
+userSchema.pre('findOneAndUpdate', function (next) {
+  this._update.updatedAt = new Date();
+
+  next();
+});
+
+/////////////////////////
+// STATIC METHODS////////
+/////////////////////////
+
+// Compare encrypted password with input password
+userSchema.methods.correctPassword = async function (
+  inputPassword,
+  userPassword
+) {
+  return await bcrypt.compare(inputPassword, userPassword);
+};
+
+// Check if password has been changed after jwt was issued
+userSchema.methods.changedPasswordAfterJWT = function (jwtTimestamp) {
+  // FALSE means password is not changed after jwt was issued
+  if (this.passwordChangedAt) {
+    const changedTimestamp = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10
+    );
+
+    return jwtTimestamp < changedTimestamp;
+  }
+
+  return false;
+};
+
+// Generate a password reset token
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  this.passwordResetTokenExpiresIn = Date.now() + 10 * 60 * 1000;
+
+  return resetToken;
+};
+
+const User = mongoose.model('User', userSchema);
+
+module.exports = User;

@@ -1,0 +1,59 @@
+[
+  {
+    "_id": "6325555707e7ae37c4a133a4",
+    "images": [],
+    "likes": 72,
+    "comments": [
+      "63256ae7b65ff12c902fe951",
+      "63256af5b65ff12c902fe955",
+      "6325602b45f3586ff42f2bfd",
+      "6325604845f3586ff42f2c03"
+    ],
+    "createdAt": 1663390034521,
+    "modified": false,
+    "topic": "6325534007e7ae37c4a1338c",
+    "title": "Can't decide on my major",
+    "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+    "author": "63255767078b974ab09c7aec",
+    "updatedAt": 1663396832436
+  },
+  {
+    "_id": "632555a768c2e3877c00c9e9",
+    "images": [],
+    "likes": 126,
+    "comments": [],
+    "createdAt": 1663391129414,
+    "modified": false,
+    "topic": "6325534007e7ae37c4a1338c",
+    "title": "Secret parking spot near school",
+    "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+    "author": "63255756078b974ab09c7ae6",
+    "updatedAt": 1663392203035
+  },
+  {
+    "_id": "632555d668c2e3877c00c9eb",
+    "images": [],
+    "likes": 6,
+    "comments": [],
+    "createdAt": 1663391129414,
+    "modified": false,
+    "topic": "6325536107e7ae37c4a1338e",
+    "title": "Anyone took CPSC 481?",
+    "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+    "author": "63255756078b974ab09c7ae6",
+    "updatedAt": 1663392218613
+  },
+  {
+    "_id": "632555e668c2e3877c00c9ed",
+    "images": [],
+    "likes": 25,
+    "comments": [],
+    "createdAt": 1663391129414,
+    "modified": false,
+    "topic": "6325536107e7ae37c4a1338e",
+    "title": "Need suggestions for electives",
+    "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+    "author": "6325575d078b974ab09c7ae9",
+    "updatedAt": 1663392235904
+  }
+]
