@@ -71,16 +71,16 @@ postSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'topic',
     select: '-_id -__v -posts -icon',
-  })
-    .populate({
-      path: 'author',
-      select:
-        '-email -password -bookmarks -likedPosts -comments -role -createdAt -updatedAt -passwordChangedAt -passwordResetToken -passwordResetTokenExpiresIn -_id -__v',
-    })
-    .populate({
-      path: 'comments',
-      select: '-__v -_id -comments -parentComment -fromPost',
-    });
+  }).populate({
+    path: 'author',
+    // Only getting username, gender, profile pic
+    select:
+      '-email -password -bookmarks -likedPosts -posts -comments -role -createdAt -updatedAt -passwordChangedAt -passwordResetToken -passwordResetTokenExpiresIn -_id -__v',
+  });
+  // .populate({
+  //   path: 'comments',
+  //   select: '-__v -_id -comments -parentComment -fromPost',
+  // });
 
   next();
 });
