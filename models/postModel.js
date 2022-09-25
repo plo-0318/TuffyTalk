@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
+const util = require('../utils/util');
 
 const postSchema = mongoose.Schema({
   topic: {
     type: mongoose.Schema.ObjectId,
     ref: 'Topic',
-    required: false,
     required: [true, 'A post must belong to a topic'],
   },
   title: {
@@ -87,10 +87,20 @@ postSchema.pre(/^find/, function (next) {
 
 // Update updatedAt when document is modified
 postSchema.pre('findOneAndUpdate', function (next) {
-  this._update.updatedAt = new Date();
+  if (this._update) {
+    this._update.updatedAt = new Date();
+  }
 
   next();
 });
+
+/////////////////////////
+/// INSTANCE METHODS ////
+/////////////////////////
+
+// Remove comment
+postSchema.methods.sameAuthor = util.sameAuthor;
+postSchema.methods.setReference = util.setReference;
 
 const Post = mongoose.model('Post', postSchema);
 

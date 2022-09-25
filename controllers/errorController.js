@@ -1,3 +1,4 @@
+const e = require('express');
 const AppError = require('../utils/AppError');
 
 const handleJWTTokenError = () => {
@@ -6,6 +7,22 @@ const handleJWTTokenError = () => {
 
 const handleJWTExpiredError = () => {
   return new AppError('Token expired. Please log in again.', 401);
+};
+
+const handleDuplicateFieldError = (err) => {
+  const field = Object.keys(err.keyValue)[0];
+
+  return new AppError(
+    `Duplication: \'${field}\' \"${field} is already in use\"`,
+    400
+  );
+};
+
+const handleValidationErrorDB = (err) => {
+  const field = Object.keys(err.errors)[0];
+  const message = err.errors[field].message;
+
+  return new AppError(`Validation: \'${field}\': \"${message}\"`, 400);
 };
 
 const sendErrorDev = (err, req, res) => {
@@ -38,6 +55,7 @@ const globalErrorHandler = (err, req, res, next) => {
 
   console.log('\n');
   console.log('🤬🤬🤬🤬🤬', err.name);
+  console.log(err);
   console.log('\n');
 
   error.statusCode = error.statusCode || 500;
@@ -52,6 +70,12 @@ const globalErrorHandler = (err, req, res, next) => {
 
     // JWT expired error
     if (err.name === 'TokenExpiredError') error = handleJWTExpiredError();
+
+    // DB Duplicate field error
+    if (err.code === 11000) error = handleDuplicateFieldError(err);
+
+    // DB validation error
+    if (err.name === 'ValidationError') error = handleValidationErrorDB(err);
 
     sendErrorProd(error, req, res);
   }

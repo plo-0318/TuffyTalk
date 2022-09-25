@@ -86,3 +86,41 @@ exports.deleteOne = (Model) => {
     });
   });
 };
+
+exports.userUpdateOne = (Model, validateAuthor, ...fields) => {
+  return catchAsync(async (req, res, next) => {
+    // Check if the current user is trying to modify other user's content
+    /* if (validateAuthor) {
+      const doc = await Model.findOne({ _id: req.params.id });
+
+      if (!doc.sameAuthor(req.user)) {
+        return next(new AppError("Cannot modify other user's post", 401));
+      }
+    } */
+
+    // Select only the allowed fields from req.body
+    const dataToUpdate = {};
+    fields.forEach((field) => {
+      if (req.body[field]) {
+        dataToUpdate[field] = req.body[field];
+      }
+    });
+
+    // Find and update document
+    const doc = await Model.findByIdAndUpdate(req.params.id, dataToUpdate, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!doc) {
+      return next(new AppError('Could not find a document with this ID', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        data: doc,
+      },
+    });
+  });
+};

@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
+const setReference = require('../utils/util').setReference;
+
 function validatePassword(val) {
   const containsChar = /[a-zA-Z]/.test(val);
   const containsNum = /\d/.test(val);
@@ -22,11 +24,12 @@ const userSchema = mongoose.Schema({
     unique: true,
     required: [true, 'A user must have an username.'],
     maxLength: [20, 'A username cannot exceeds 20 characters'],
-    minLength: [1, 'A username cannot be empty'],
+    minLength: [3, 'A username should contain at least 3 characters'],
     trim: true,
   },
   email: {
     type: String,
+    unique: true,
     validate: {
       validator: validateEmail,
       message: 'Incorrect email format.',
@@ -145,7 +148,7 @@ userSchema.pre('findOneAndUpdate', function (next) {
 });
 
 /////////////////////////
-// STATIC METHODS////////
+/// INSTANCE METHODS ////
 /////////////////////////
 
 // Compare encrypted password with input password
@@ -184,6 +187,9 @@ userSchema.methods.createPasswordResetToken = function () {
 
   return resetToken;
 };
+
+// Add or remove reference
+userSchema.methods.setReference = setReference;
 
 const User = mongoose.model('User', userSchema);
 

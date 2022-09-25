@@ -21,16 +21,22 @@ const signToken = (id) => {
 const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
 
+  const expires = new Date(
+    Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+  );
+
   const cookieOptions = {
-    expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-    ),
+    expires,
     httpOnly: true,
+    sameSite: 'lax',
+    secure: false,
   };
 
-  if (process.env.NODE_ENV === 'production') {
-    cookieOptions.secure = true;
-  }
+  //TODO: UNCOMMENT THIS FOR PRODUCTION
+  // if (process.env.NODE_ENV === 'production') {
+  //   cookieOptions.secure = true;
+  //   cookieOptions.sameSite = 'none';
+  // }
 
   res.cookie('jwt', token, cookieOptions);
 
@@ -39,6 +45,7 @@ const createSendToken = (user, statusCode, res) => {
   res.status(statusCode).json({
     status: 'success',
     token,
+    tokenExpiresIn: expires,
     data: {
       user,
     },
@@ -99,8 +106,8 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
-  } else if (req.cookie && req.cookie.jwt) {
-    token = req.cookie.jwt;
+  } else if (req.cookies && req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
 
   if (!token || token === 'null') {
@@ -127,7 +134,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     );
   }
 
-  // 5) If all good, grant access
+  // 5) If all good, grant access, and put the current user on the req object.
   req.user = currentUser;
   next();
 });
@@ -236,3 +243,16 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   // 3) Log the user in, send JWT
   createSendToken(user, 200, res);
 });
+
+exports.validateSameAuthor = (Model) => {
+  return catchAsync(async (req, res, next) => {
+    const doc = await Model.findOne({ _id: req.params.id });
+
+    if (!doc.sameAuthor(req.user)) {
+      return next(new AppError("Cannot modify other user's document", 401));
+    }
+
+    req.doc = doc;
+    next();
+  });
+};

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const util = require('../utils/util');
 
 const commentSchema = mongoose.Schema({
   author: {
@@ -43,6 +44,10 @@ const commentSchema = mongoose.Schema({
     default: new Date(),
   },
   updatedAt: Date,
+  deleted: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 /////////////////////////
@@ -73,21 +78,20 @@ commentSchema.pre(/^save/, async function (next) {
 /////////////////////////
 
 // Populate referenced fields
-commentSchema.pre('find', async function (next) {
+commentSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'author',
     select:
       '-email -password -bookmarks -likedPosts -comments -role -createdAt -updatedAt -passwordChangedAt -passwordResetToken -passwordResetTokenExpiresIn -_id -__v',
-  })
-    .populate({
-      path: 'fromPost',
-      select:
-        '-topic -content -__v -images -likes -comments -createdAt -updatedAt -modified',
-    })
-    .populate({
+  }).populate({
+    path: 'fromPost',
+    select:
+      '-topic -content -__v -images -likes -comments -createdAt -updatedAt -modified',
+  });
+  /* .populate({
       path: 'comments',
       select: '-__v -_id -comments -parentComment -fromPost',
-    });
+    }); */
 
   /* console.log('I am working');
   const docToUpdate = await this.model.findOne(this.getQuery());
@@ -105,7 +109,7 @@ commentSchema.pre('findOneAndUpdate', async function (next) {
 
 // Before deleting the comment, if this is a nested comment, remove this from the parent reference
 // Saving the current comment in the query object
-commentSchema.pre('findOneAndDelete', async function (next) {
+/* commentSchema.pre('findOneAndDelete', async function (next) {
   const currentComment = await this.model.findOne(this.getQuery());
 
   if (!currentComment.parentComment) {
@@ -133,7 +137,15 @@ commentSchema.post('findOneAndDelete', async function () {
   this.parentComment.comments.splice(childIndex, 1);
 
   await this.parentComment.save();
-});
+}); */
+
+/////////////////////////
+/// INSTANCE METHODS ////
+/////////////////////////
+
+// Remove comment
+commentSchema.methods.sameAuthor = util.sameAuthor;
+commentSchema.methods.setReference = util.setReference;
 
 const Comment = mongoose.model('Comment', commentSchema);
 
