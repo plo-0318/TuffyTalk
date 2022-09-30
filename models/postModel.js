@@ -1,61 +1,75 @@
 const mongoose = require('mongoose');
 const util = require('../utils/util');
 
-const postSchema = mongoose.Schema({
-  topic: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Topic',
-    required: [true, 'A post must belong to a topic'],
-  },
-  title: {
-    type: String,
-    required: [true, 'A post must have a title.'],
-    maxLength: [50, 'A post title cannot exceeds 50 characters.'],
-    minLength: [3, 'A post title needs to be at least 3 characters.'],
-    trim: true,
-  },
-  content: {
-    type: String,
-    required: [true, 'A post must have a content.'],
-    maxLength: [1000, 'A post content cannot exceeds 500 characters.'],
-    minLength: [3, 'A post content needs to be at least 3 characters.'],
-  },
-  images: {
-    type: [String],
-    validate: {
-      validator: function (val) {
-        val.length <= 10;
-      },
-      message: 'A post can only contain 10 images.',
-    },
-  },
-  author: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
-    required: [true, 'A post must have an author'],
-  },
-  likes: {
-    type: Number,
-    default: 0,
-  },
-  comments: [
-    {
+const postSchema = mongoose.Schema(
+  {
+    topic: {
       type: mongoose.Schema.ObjectId,
-      ref: 'Comment',
-      required: false,
+      ref: 'Topic',
+      required: [true, 'A post must belong to a topic'],
     },
-  ],
-  createdAt: {
-    type: Date,
-    default: Date.now(),
+    title: {
+      type: String,
+      required: [true, 'A post must have a title.'],
+      maxLength: [50, 'A post title cannot exceeds 50 characters.'],
+      minLength: [3, 'A post title needs to be at least 3 characters.'],
+      trim: true,
+    },
+    content: {
+      type: String,
+      required: [true, 'A post must have a content.'],
+      maxLength: [1000, 'A post content cannot exceeds 500 characters.'],
+      minLength: [3, 'A post content needs to be at least 3 characters.'],
+    },
+    images: {
+      type: [String],
+      validate: {
+        validator: function (val) {
+          val.length <= 10;
+        },
+        message: 'A post can only contain 10 images.',
+      },
+    },
+    author: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User',
+      required: [true, 'A post must have an author'],
+    },
+    likes: {
+      type: Number,
+      default: 0,
+    },
+    comments: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Comment',
+        required: false,
+      },
+    ],
+    createdAt: {
+      type: Date,
+      default: Date.now(),
+    },
+    updatedAt: {
+      type: Date,
+    },
+    modified: {
+      type: Boolean,
+      default: false,
+    },
   },
-  updatedAt: {
-    type: Date,
-  },
-  modified: {
-    type: Boolean,
-    default: false,
-  },
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+);
+
+/////////////////////////
+// VIRTUAL PROPERTIES ///
+/////////////////////////
+
+postSchema.virtual('numComments').get(function () {
+  return this.comments.length;
 });
 
 /////////////////////////

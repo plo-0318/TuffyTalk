@@ -55,7 +55,7 @@ const commentSchema = mongoose.Schema({
 /////////////////////////
 
 // Upon creating a nested comment, add the this as a reference to the parent comment
-commentSchema.pre(/^save/, async function (next) {
+/* commentSchema.pre(/^save/, async function (next) {
   if (this.parentComment) {
     const parentDoc = await this.constructor.findOne({
       _id: this.parentComment,
@@ -71,7 +71,7 @@ commentSchema.pre(/^save/, async function (next) {
   }
 
   next();
-});
+}); */
 
 /////////////////////////
 // QUERY MIDDLEWARE//////
@@ -82,12 +82,13 @@ commentSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'author',
     select:
-      '-email -password -bookmarks -likedPosts -comments -role -createdAt -updatedAt -passwordChangedAt -passwordResetToken -passwordResetTokenExpiresIn -_id -__v',
-  }).populate({
+      '-email -password -bookmarks -likedPosts -comments -role -createdAt -updatedAt -passwordChangedAt -passwordResetToken -passwordResetTokenExpiresIn -_id -__v -posts',
+  });
+  /* .populate({
     path: 'fromPost',
     select:
       '-topic -content -__v -images -likes -comments -createdAt -updatedAt -modified',
-  });
+  }); */
   /* .populate({
       path: 'comments',
       select: '-__v -_id -comments -parentComment -fromPost',

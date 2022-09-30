@@ -114,8 +114,6 @@ exports.deleteComment = catchAsync(async (req, res, next) => {
     return next(new AppError('Could not find a comment with this id', 404));
   }
 
-  console.log(comment);
-
   /*  // Delete reference from post
   if (comment.fromPost) {
     const post = await Post.findOne({ _id: comment.fromPost._id });
@@ -147,3 +145,5 @@ exports.toggleLikePost = catchAsync(async (req, res, next) => {});
 exports.toggleLikeComment = catchAsync(async (req, res, next) => {});
 
 exports.updateMe = catchAsync(async (req, res, next) => {});
+
+exports.updatePassword = catchAsync(async (req, res, next) => {});

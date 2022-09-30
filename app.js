@@ -42,11 +42,6 @@ TODO:
 updating likes --> store id in likes?
 custom route for toggling likes? (if likes contains uid ? remove uid : add uid)
 
-add verifyOwner to comment, post, ..?
-custom route for updating comment/post, accepting only certain fields
-
-add route for getting post comments
-
 route for user updateMe
 
 add security stuff

@@ -4,6 +4,7 @@ const topicSchema = mongoose.Schema({
   name: {
     type: String,
     trim: true,
+    unique: true,
     required: [true, 'A topic must have a name'],
     minLength: [1, 'The name of a topic must be at least 1 character'],
     maxLength: [20, 'The name of a topic cannot exceed 20 characters'],
@@ -19,6 +20,14 @@ const topicSchema = mongoose.Schema({
     type: String,
     default: 'icon-topic-default.jpg',
   },
+  category: {
+    type: String,
+    required: [true, 'A topic must belong to a category'],
+    enum: {
+      values: ['general', 'stem', 'others'],
+      message: "A topic category is either 'general', 'stem', or 'others'",
+    },
+  },
 });
 
 /////////////////////////
@@ -30,7 +39,7 @@ topicSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'posts',
     select:
-      '-topic -content -__v -images -likes -comments -createdAt -updatedAt -modified',
+      '-topic -__v -images -likes -content -createdAt -updatedAt -modified',
   });
 
   next();
