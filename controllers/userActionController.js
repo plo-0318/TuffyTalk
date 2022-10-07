@@ -2,6 +2,7 @@ const Topic = require('../models/topicModel');
 const Post = require('../models/postModel');
 const Comment = require('../models/commentModel');
 const User = require('../models/userModel');
+const Major = require('../models/majorModel');
 
 const AppError = require('../utils/AppError');
 const catchAsync = require('../utils/catchAsync');
@@ -23,8 +24,11 @@ exports.createPost = catchAsync(async (req, res, next) => {
     content,
   });
 
-  // Add referent to user
+  // Add reference to user
   await req.user.setReference('posts', 'add', newPost._id);
+
+  // Add reference to topic
+  await topic.setReference('posts', 'add', newPost._id);
 
   res.status(201).json({
     status: 'success',
@@ -91,15 +95,27 @@ exports.updateComment = handlerFactory.userUpdateOne(Comment, true, 'content');
 
 exports.deletePost = catchAsync(async (req, res, next) => {
   //   const post = await Post.findOne({ _id: req.params.id }).select('_id');
+  // req.doc comes from validateAuthor middleware
   const post = req.doc;
 
   if (!post) {
     return next(new AppError('Could not find a post with this id', 404));
   }
 
+  const topic = await Topic.findById(req.doc.topic._id);
+
+  // Delete reference from user
   await req.user.setReference('posts', 'remove', post._id);
 
-  await Post.findOneAndDelete({ _id: post._id });
+  // Delete reference from topic
+  await topic.setReference('posts', 'remove', post._id);
+
+  // TODO: delete the reference from user bookmarks?
+
+  // Delete the actual post
+  if (topic) {
+    await Post.findOneAndDelete({ _id: post._id });
+  }
 
   res.status(204).json({
     status: 'success',
@@ -140,10 +156,58 @@ exports.deleteComment = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.toggleLikePost = catchAsync(async (req, res, next) => {});
+exports.toggleLikePost = catchAsync(async (req, res, next) => {
+  const { postId } = req.params;
+
+  const post = await Post.findById(postId);
+
+  if (!post) {
+    return next(new AppError('No post found with this id', 404));
+  }
+
+  await post.setReference('likes', 'toggle', req.user._id);
+
+  res.status(200).json({
+    status: 'sucess',
+    data: {
+      data: post,
+    },
+  });
+});
 
 exports.toggleLikeComment = catchAsync(async (req, res, next) => {});
 
-exports.updateMe = catchAsync(async (req, res, next) => {});
+exports.toggleBookmark = catchAsync(async (req, res, next) => {
+  const { postId } = req.body;
 
-exports.updatePassword = catchAsync(async (req, res, next) => {});
+  const user = await User.findById(req.user.id);
+
+  await user.setReference('bookmarks', 'toggle', postId);
+
+  req.user = user;
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      data: user,
+    },
+  });
+});
+
+exports.getMyPosts = (type) => {
+  return catchAsync(async (req, res, next) => {
+    const ids = type === 'bookmark' ? req.user.bookmarks : req.user.posts;
+
+    const posts = await Post.find({ _id: { $in: ids } }).select(
+      '-__v -content -likes -images -comments -id'
+    );
+
+    res.status(200).json({
+      status: 'success',
+      length: posts.length,
+      data: {
+        data: posts,
+      },
+    });
+  });
+};

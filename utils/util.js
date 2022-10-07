@@ -5,7 +5,9 @@ exports.setReference = async function (refName, method, refId) {
     return;
   }
 
-  if (method !== 'add' && method !== 'remove') {
+  const allowedMethods = ['add', 'remove', 'toggle'];
+
+  if (!allowedMethods.includes(method)) {
     return;
   }
 
@@ -16,6 +18,12 @@ exports.setReference = async function (refName, method, refId) {
     this[refName].push(refObjId);
   } else if (method === 'remove') {
     this[refName].splice(refIndex, 1);
+  } else if (method === 'toggle') {
+    if (refIndex < 0) {
+      this[refName].push(refObjId);
+    } else {
+      this[refName].splice(refIndex, 1);
+    }
   }
 
   await this.save();
@@ -27,4 +35,14 @@ exports.sameAuthor = function (user) {
   }
 
   return this.author.username === user.username;
+};
+
+exports.updateTime = async function () {
+  if (!this.updatedAt) {
+    return;
+  }
+
+  this.updatedAt = new Date();
+
+  await this.save();
 };

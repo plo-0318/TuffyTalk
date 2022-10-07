@@ -22,10 +22,12 @@ const commentSchema = mongoose.Schema({
       message: 'A comment can only contain 5 images.',
     },
   },
-  likes: {
-    type: Number,
-    default: 0,
-  },
+  likes: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User',
+    },
+  ],
   comments: [
     { type: mongoose.Schema.ObjectId, ref: 'Comment', required: false },
   ],
@@ -102,11 +104,11 @@ commentSchema.pre(/^find/, function (next) {
 });
 
 // Update updatedAt when document is modified
-commentSchema.pre('findOneAndUpdate', async function (next) {
-  this._update.updatedAt = new Date();
+// commentSchema.pre('findOneAndUpdate', async function (next) {
+//   this._update.updatedAt = new Date();
 
-  next();
-});
+//   next();
+// });
 
 // Before deleting the comment, if this is a nested comment, remove this from the parent reference
 // Saving the current comment in the query object
@@ -147,6 +149,7 @@ commentSchema.post('findOneAndDelete', async function () {
 // Remove comment
 commentSchema.methods.sameAuthor = util.sameAuthor;
 commentSchema.methods.setReference = util.setReference;
+commentSchema.methods.updateTime = util.updateTime;
 
 const Comment = mongoose.model('Comment', commentSchema);
 

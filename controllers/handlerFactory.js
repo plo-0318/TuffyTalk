@@ -89,7 +89,7 @@ exports.deleteOne = (Model) => {
 
 exports.userUpdateOne = (Model, validateAuthor, ...fields) => {
   return catchAsync(async (req, res, next) => {
-    // Check if the current user is trying to modify other user's content
+    // Check if the current user is trying to modify other user's content --> moved to a middleware
     /* if (validateAuthor) {
       const doc = await Model.findOne({ _id: req.params.id });
 
@@ -114,6 +114,12 @@ exports.userUpdateOne = (Model, validateAuthor, ...fields) => {
 
     if (!doc) {
       return next(new AppError('Could not find a document with this ID', 404));
+    }
+
+    if (Object.keys(dataToUpdate).length > 1) {
+      if (doc.updateTime) {
+        await doc.updateTime();
+      }
     }
 
     res.status(200).json({

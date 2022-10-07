@@ -35,4 +35,16 @@ router
     userActionController.deleteComment
   );
 
+router.route('/update-me').patch(authController.updateMe);
+router.route('/update-my-password').patch(authController.updatePassword);
+router.route('/toggle-bookmark').patch(userActionController.toggleBookmark);
+router
+  .route('/get-my-bookmarked-posts')
+  .get(userActionController.getMyPosts('bookmark'));
+router.route('/get-my-posts').get(userActionController.getMyPosts('post'));
+
+router
+  .route('/toggle-like-post/:postId')
+  .patch(userActionController.toggleLikePost);
+
 module.exports = router;

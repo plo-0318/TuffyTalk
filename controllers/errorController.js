@@ -10,19 +10,25 @@ const handleJWTExpiredError = () => {
 };
 
 const handleDuplicateFieldError = (err) => {
-  const field = Object.keys(err.keyValue)[0];
+  let field = Object.keys(err.keyValue)[0];
+  field = field.charAt(0).toUpperCase() + field.slice(1);
 
-  return new AppError(
-    `Duplication: \'${field}\' \"${field} is already in use\"`,
-    400
-  );
+  return new AppError(`${field} is already in use`, 400, {
+    type: 'duplication',
+    field,
+    message: `${field} is already in use`,
+  });
 };
 
 const handleValidationErrorDB = (err) => {
   const field = Object.keys(err.errors)[0];
   const message = err.errors[field].message;
 
-  return new AppError(`Validation: \'${field}\': \"${message}\"`, 400);
+  return new AppError(`Validation: ${message}`, 400, {
+    type: 'validation',
+    field,
+    message,
+  });
 };
 
 const sendErrorDev = (err, req, res) => {
@@ -39,6 +45,7 @@ const sendErrorProd = (err, req, res) => {
     return res.status(err.statusCode).json({
       status: err.status,
       message: err.message,
+      errorData: err.errorData || null,
     });
   }
 

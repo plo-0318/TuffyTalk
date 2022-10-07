@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
 const User = require('../models/userModel');
+const Major = require('../models/majorModel');
 const AppError = require('../utils/AppError');
 const catchAsync = require('../utils/catchAsync');
 const Email = require('../utils/Email');
@@ -18,7 +19,7 @@ const signToken = (id) => {
   return token;
 };
 
-const createSendToken = (user, statusCode, res) => {
+createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
 
   const expires = new Date(
@@ -91,6 +92,46 @@ exports.logout = (req, res) => {
   res.status(200).json({
     status: 'success',
   });
+};
+
+exports.isLoggedIn = async (req, res, next) => {
+  const sendNoUser = () => {
+    res.status(200).json({
+      status: 'sucess',
+      user: null,
+    });
+  };
+
+  try {
+    if (req.cookies.jwt) {
+      // 1) Validate token
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET
+      );
+
+      // 2) Check if user still exist (ex: user deleted)
+      const currentUser = await User.findById(decoded.id);
+
+      if (!currentUser) {
+        sendNoUser();
+      }
+
+      // 3) Check if user updated password after token was issued
+      if (currentUser.changedPasswordAfterJWT(decoded.iat)) {
+        sendNoUser();
+      }
+
+      res.status(200).json({
+        status: 'success',
+        user: currentUser,
+      });
+    } else {
+      sendNoUser();
+    }
+  } catch (err) {
+    sendNoUser();
+  }
 };
 
 /////////////////////////
@@ -166,7 +207,7 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     !user ||
     !(await user.correctPassword(req.body.currentPassword, user.password))
   ) {
-    return next(new AppError('Your current password is incorrect.', 401));
+    return next(new AppError('Your current password is incorrect', 401));
   }
 
   // 3) if so, update the password
@@ -248,6 +289,10 @@ exports.validateSameAuthor = (Model) => {
   return catchAsync(async (req, res, next) => {
     const doc = await Model.findOne({ _id: req.params.id });
 
+    if (!doc) {
+      return next(new AppError('Cannot find a document with is id', 404));
+    }
+
     if (!doc.sameAuthor(req.user)) {
       return next(new AppError("Cannot modify other user's document", 401));
     }
@@ -256,3 +301,49 @@ exports.validateSameAuthor = (Model) => {
     next();
   });
 };
+
+/////////////////////////
+////// UPDATE USER //////
+/////////////////////////
+
+exports.updateMe = catchAsync(async (req, res, next) => {
+  const dataToUpdate = {};
+
+  if (req.body.username) {
+    dataToUpdate.username = req.body.username;
+  }
+  if (req.body.major) {
+    dataToUpdate.major = req.body.major;
+
+    const major = await Major.findOne({ name: dataToUpdate.major });
+
+    if (!major) {
+      return next(
+        new AppError(`${dataToUpdate.major} is not a valid major`, 400)
+      );
+    }
+  }
+
+  if (Object.keys(dataToUpdate).length < 1) {
+    res.status(200).json({
+      status: 'success',
+      data: req.user,
+    });
+  } else {
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      dataToUpdate,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    req.user = updatedUser;
+
+    res.status(200).json({
+      status: 'success',
+      data: updatedUser,
+    });
+  }
+});

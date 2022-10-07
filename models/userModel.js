@@ -27,6 +27,11 @@ const userSchema = mongoose.Schema({
     minLength: [3, 'A username should contain at least 3 characters'],
     trim: true,
   },
+  major: {
+    type: String,
+    trim: true,
+    default: 'Undecided',
+  },
   email: {
     type: String,
     unique: true,
@@ -58,12 +63,6 @@ const userSchema = mongoose.Schema({
     },
   },
   bookmarks: [
-    {
-      type: mongoose.Schema.ObjectId,
-      ref: 'Post',
-    },
-  ],
-  likedPosts: [
     {
       type: mongoose.Schema.ObjectId,
       ref: 'Post',
@@ -128,10 +127,6 @@ userSchema.pre(/^find/, function (next) {
     path: 'bookmarks',
     // select: '',
   })
-    .populate({
-      path: 'likedPosts',
-      // select: '',
-    })
     .populate({
       path: 'comments',
       // select: ''

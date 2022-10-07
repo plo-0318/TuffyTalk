@@ -35,10 +35,12 @@ const postSchema = mongoose.Schema(
       ref: 'User',
       required: [true, 'A post must have an author'],
     },
-    likes: {
-      type: Number,
-      default: 0,
-    },
+    likes: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+    ],
     comments: [
       {
         type: mongoose.Schema.ObjectId,
@@ -53,10 +55,6 @@ const postSchema = mongoose.Schema(
     updatedAt: {
       type: Date,
     },
-    modified: {
-      type: Boolean,
-      default: false,
-    },
   },
   {
     toJSON: { virtuals: true },
@@ -68,9 +66,9 @@ const postSchema = mongoose.Schema(
 // VIRTUAL PROPERTIES ///
 /////////////////////////
 
-postSchema.virtual('numComments').get(function () {
-  return this.comments.length;
-});
+// postSchema.virtual('numComments').get(function () {
+//   return this.comments.length;
+// });
 
 /////////////////////////
 // DOCUMENT MIDDLEWARE///
@@ -84,7 +82,7 @@ postSchema.virtual('numComments').get(function () {
 postSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'topic',
-    select: '-_id -__v -posts -icon',
+    select: '-__v -posts',
   }).populate({
     path: 'author',
     // Only getting username, gender, profile pic
@@ -100,13 +98,13 @@ postSchema.pre(/^find/, function (next) {
 });
 
 // Update updatedAt when document is modified
-postSchema.pre('findOneAndUpdate', function (next) {
-  if (this._update) {
-    this._update.updatedAt = new Date();
-  }
+// postSchema.pre('findOneAndUpdate', function (next) {
+//   if (this._update) {
+//     this._update.updatedAt = new Date();
+//   }
 
-  next();
-});
+//   next();
+// });
 
 /////////////////////////
 /// INSTANCE METHODS ////
@@ -115,6 +113,7 @@ postSchema.pre('findOneAndUpdate', function (next) {
 // Remove comment
 postSchema.methods.sameAuthor = util.sameAuthor;
 postSchema.methods.setReference = util.setReference;
+postSchema.methods.updateTime = util.updateTime;
 
 const Post = mongoose.model('Post', postSchema);
 

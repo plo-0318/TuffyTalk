@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { setReference } = require('../utils/util');
 
 const topicSchema = mongoose.Schema({
   name: {
@@ -18,7 +19,7 @@ const topicSchema = mongoose.Schema({
   ],
   icon: {
     type: String,
-    default: 'icon-topic-default.jpg',
+    default: 'topic-placeholder.png',
   },
   category: {
     type: String,
@@ -44,6 +45,12 @@ topicSchema.pre(/^find/, function (next) {
 
   next();
 });
+
+/////////////////////////
+/// INSTANCE METHODS ////
+/////////////////////////
+
+topicSchema.methods.setReference = setReference;
 
 const Topic = mongoose.model('Topic', topicSchema);
 

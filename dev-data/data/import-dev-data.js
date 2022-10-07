@@ -6,6 +6,7 @@ const Topic = require('../../models/topicModel');
 const Post = require('../../models/postModel');
 const User = require('../../models/userModel');
 const Comment = require('../../models/commentModel');
+const Major = require('../../models/majorModel');
 
 dotenv.config({ path: './config.env' });
 
@@ -31,6 +32,7 @@ const users = JSON.parse(fs.readFileSync(`${__dirname}/users.json`, 'utf-8'));
 const comments = JSON.parse(
   fs.readFileSync(`${__dirname}/comments.json`, 'utf-8')
 );
+const majors = JSON.parse(fs.readFileSync(`${__dirname}/majors.json`, 'utf-8'));
 
 const importData = async () => {
   try {
@@ -38,6 +40,7 @@ const importData = async () => {
     await Post.create(posts);
     await User.create(users);
     await Comment.create(comments);
+    await Major.create(majors);
 
     console.log('Data imported successfully...');
   } catch (err) {
@@ -53,6 +56,7 @@ const deleteData = async () => {
     await Post.deleteMany();
     await User.deleteMany();
     await Comment.deleteMany();
+    await Major.deleteMany();
 
     console.log('Data deleted successfully...');
   } catch (err) {
