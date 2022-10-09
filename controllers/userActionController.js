@@ -1,3 +1,7 @@
+const multer = require('multer');
+const sharp = require('sharp');
+const mkdirp = require('mkdirp');
+
 const Topic = require('../models/topicModel');
 const Post = require('../models/postModel');
 const Comment = require('../models/commentModel');
@@ -7,6 +11,10 @@ const Major = require('../models/majorModel');
 const AppError = require('../utils/AppError');
 const catchAsync = require('../utils/catchAsync');
 const handlerFactory = require('../controllers/handlerFactory');
+
+/////////////////////////
+//////// CREATE /////////
+/////////////////////////
 
 exports.createPost = catchAsync(async (req, res, next) => {
   const { topic: topicName, title, content } = req.body;
@@ -84,6 +92,10 @@ exports.createComment = catchAsync(async (req, res, next) => {
   });
 });
 
+/////////////////////////
+//////// UPDATE /////////
+/////////////////////////
+
 exports.updatePost = handlerFactory.userUpdateOne(
   Post,
   true,
@@ -92,6 +104,10 @@ exports.updatePost = handlerFactory.userUpdateOne(
 );
 
 exports.updateComment = handlerFactory.userUpdateOne(Comment, true, 'content');
+
+/////////////////////////
+//////// DELETE /////////
+/////////////////////////
 
 exports.deletePost = catchAsync(async (req, res, next) => {
   //   const post = await Post.findOne({ _id: req.params.id }).select('_id');
@@ -156,26 +172,30 @@ exports.deleteComment = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.toggleLikePost = catchAsync(async (req, res, next) => {
-  const { postId } = req.params;
+/////////////////////////
+//////// TOGGLE /////////
+/////////////////////////
 
-  const post = await Post.findById(postId);
+exports.toggleLike = (model) => {
+  return catchAsync(async (req, res, next) => {
+    const { id } = req.params;
 
-  if (!post) {
-    return next(new AppError('No post found with this id', 404));
-  }
+    const doc = await model.findById(id);
 
-  await post.setReference('likes', 'toggle', req.user._id);
+    if (!doc) {
+      return next(new AppError('No document found with this id', 404));
+    }
 
-  res.status(200).json({
-    status: 'sucess',
-    data: {
-      data: post,
-    },
+    await doc.setReference('likes', 'toggle', req.user._id);
+
+    res.status(200).json({
+      status: 'sucess',
+      data: {
+        data: doc,
+      },
+    });
   });
-});
-
-exports.toggleLikeComment = catchAsync(async (req, res, next) => {});
+};
 
 exports.toggleBookmark = catchAsync(async (req, res, next) => {
   const { postId } = req.body;
@@ -194,6 +214,10 @@ exports.toggleBookmark = catchAsync(async (req, res, next) => {
   });
 });
 
+/////////////////////////
+////////// GET //////////
+/////////////////////////
+
 exports.getMyPosts = (type) => {
   return catchAsync(async (req, res, next) => {
     const ids = type === 'bookmark' ? req.user.bookmarks : req.user.posts;
@@ -211,3 +235,106 @@ exports.getMyPosts = (type) => {
     });
   });
 };
+
+/////////////////////////
+////// UPDATE USER //////
+/////////////////////////
+
+const multerStorage = multer.memoryStorage();
+
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Please only upload images', 400), false);
+  }
+};
+
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+});
+
+exports.uploadUserPhoto = upload.single('photo');
+
+exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
+  if (!req.file) {
+    return next();
+  }
+
+  req.file.filename = `user-${req.user._id}-profile-pic.webp`;
+
+  await mkdirp(`${appRoot}/public/img/users/${req.user._id}`);
+
+  await sharp(req.file.buffer)
+    .rotate()
+    .resize(500, 500)
+    .toFormat('webp')
+    .webp({ quality: 90 })
+    .toFile(`public/img/users/${req.user._id}/${req.file.filename}`);
+
+  next();
+});
+
+const filterObj = (obj, ...allowedFields) => {
+  const filteredObj = {};
+
+  Object.keys(obj).forEach((key) => {
+    if (allowedFields.includes(key)) {
+      filteredObj[key] = obj[key];
+    }
+  });
+
+  return filteredObj;
+};
+
+exports.updateMe = catchAsync(async (req, res, next) => {
+  // const dataToUpdate = {};
+
+  const dataToUpdate = filterObj(req.body, 'major', 'username');
+
+  if (req.file) {
+    dataToUpdate.profilePicture = req.file.filename;
+  }
+
+  if (dataToUpdate.major) {
+    dataToUpdate.major = req.body.major;
+
+    const major = await Major.findOne({ name: dataToUpdate.major });
+
+    if (!major) {
+      return next(
+        new AppError(`${dataToUpdate.major} is not a valid major`, 400)
+      );
+    }
+  }
+
+  if (Object.keys(dataToUpdate).length < 1) {
+    res.status(200).json({
+      status: 'success',
+      changed: false,
+      data: {
+        data: req.user,
+      },
+    });
+  } else {
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      dataToUpdate,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    req.user = updatedUser;
+
+    res.status(200).json({
+      status: 'success',
+      changed: true,
+      data: {
+        data: updatedUser,
+      },
+    });
+  }
+});

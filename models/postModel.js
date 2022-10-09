@@ -87,7 +87,7 @@ postSchema.pre(/^find/, function (next) {
     path: 'author',
     // Only getting username, gender, profile pic
     select:
-      '-email -password -bookmarks -likedPosts -posts -comments -role -createdAt -updatedAt -passwordChangedAt -passwordResetToken -passwordResetTokenExpiresIn -_id -__v',
+      '-email -password -bookmarks -likedPosts -posts -comments -role -createdAt -updatedAt -passwordChangedAt -passwordResetToken -passwordResetTokenExpiresIn -__v',
   });
   // .populate({
   //   path: 'comments',

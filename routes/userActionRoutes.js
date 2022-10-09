@@ -1,4 +1,7 @@
 const express = require('express');
+const multer = require('multer');
+const sharp = require('sharp');
+
 const userActionController = require('../controllers/userActionController');
 const authController = require('../controllers/authController');
 const Post = require('../models/postModel');
@@ -35,7 +38,13 @@ router
     userActionController.deleteComment
   );
 
-router.route('/update-me').patch(authController.updateMe);
+router
+  .route('/update-me')
+  .patch(
+    userActionController.uploadUserPhoto,
+    userActionController.resizeUserPhoto,
+    userActionController.updateMe
+  );
 router.route('/update-my-password').patch(authController.updatePassword);
 router.route('/toggle-bookmark').patch(userActionController.toggleBookmark);
 router
@@ -44,7 +53,10 @@ router
 router.route('/get-my-posts').get(userActionController.getMyPosts('post'));
 
 router
-  .route('/toggle-like-post/:postId')
-  .patch(userActionController.toggleLikePost);
+  .route('/toggle-like-post/:id')
+  .patch(userActionController.toggleLike(Post));
+router
+  .route('/toggle-like-comment/:id')
+  .patch(userActionController.toggleLike(Comment));
 
 module.exports = router;

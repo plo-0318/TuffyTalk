@@ -84,7 +84,7 @@ commentSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'author',
     select:
-      '-email -password -bookmarks -likedPosts -comments -role -createdAt -updatedAt -passwordChangedAt -passwordResetToken -passwordResetTokenExpiresIn -_id -__v -posts',
+      '-email -password -bookmarks -likedPosts -comments -role -createdAt -updatedAt -passwordChangedAt -passwordResetToken -passwordResetTokenExpiresIn -__v -posts',
   });
   /* .populate({
     path: 'fromPost',

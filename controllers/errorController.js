@@ -1,4 +1,3 @@
-const e = require('express');
 const AppError = require('../utils/AppError');
 
 const handleJWTTokenError = () => {

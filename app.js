@@ -15,6 +15,9 @@ const AppError = require('./utils/AppError');
 
 const app = express();
 
+// Storing the root path in global variable
+global.appRoot = path.resolve(__dirname);
+
 // Logging http request in development
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
