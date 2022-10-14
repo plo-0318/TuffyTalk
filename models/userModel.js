@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
-const setReference = require('../utils/util').setReference;
+const { setReference } = require('../utils/util');
 
 function validatePassword(val) {
   const containsChar = /[a-zA-Z]/.test(val);
@@ -68,12 +68,6 @@ const userSchema = mongoose.Schema({
       ref: 'Post',
     },
   ],
-  comments: [
-    {
-      type: mongoose.Schema.ObjectId,
-      ref: 'Comment',
-    },
-  ],
   posts: [
     {
       type: mongoose.Schema.ObjectId,
@@ -127,10 +121,7 @@ userSchema.pre(/^find/, function (next) {
     path: 'bookmarks',
     // select: '',
   })
-    .populate({
-      path: 'comments',
-      // select: ''
-    }); */
+ */
 
   next();
 });

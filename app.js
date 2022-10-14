@@ -52,8 +52,5 @@ module.exports = app;
 
 /*
 TODO:
-updating likes --> store id in likes?
-custom route for toggling likes? (if likes contains uid ? remove uid : add uid)
-
 add security stuff
 */

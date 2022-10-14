@@ -41,8 +41,8 @@ router
 router
   .route('/update-me')
   .patch(
-    userActionController.uploadUserPhoto,
-    userActionController.resizeUserPhoto,
+    userActionController.uploadImage,
+    userActionController.resizeImage,
     userActionController.updateMe
   );
 router.route('/update-my-password').patch(authController.updatePassword);
@@ -58,5 +58,12 @@ router
 router
   .route('/toggle-like-comment/:id')
   .patch(userActionController.toggleLike(Comment));
+
+router
+  .route('/post-image')
+  .post(userActionController.uploadImage, userActionController.processImage);
+router
+  .route('/delete-temp-upload')
+  .delete(userActionController.deleteTempUpload);
 
 module.exports = router;

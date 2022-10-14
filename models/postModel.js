@@ -18,16 +18,16 @@ const postSchema = mongoose.Schema(
     content: {
       type: String,
       required: [true, 'A post must have a content.'],
-      maxLength: [1000, 'A post content cannot exceeds 500 characters.'],
+      maxLength: [1000, 'A post content cannot exceeds 1000 characters.'],
       minLength: [3, 'A post content needs to be at least 3 characters.'],
     },
     images: {
       type: [String],
       validate: {
         validator: function (val) {
-          val.length <= 10;
+          val.length <= 3;
         },
-        message: 'A post can only contain 10 images.',
+        message: 'A post can only contain 3 images.',
       },
     },
     author: {
@@ -66,9 +66,13 @@ const postSchema = mongoose.Schema(
 // VIRTUAL PROPERTIES ///
 /////////////////////////
 
-// postSchema.virtual('numComments').get(function () {
-//   return this.comments.length;
-// });
+postSchema.virtual('numLikes').get(function () {
+  if (this.likes) {
+    return this.likes.length;
+  }
+
+  return 0;
+});
 
 /////////////////////////
 // DOCUMENT MIDDLEWARE///
@@ -97,7 +101,7 @@ postSchema.pre(/^find/, function (next) {
   next();
 });
 
-// Update updatedAt when document is modified
+// Update updatedAt when document is modified --> moved to userUpdaeOne (only update time if its an user action)
 // postSchema.pre('findOneAndUpdate', function (next) {
 //   if (this._update) {
 //     this._update.updatedAt = new Date();

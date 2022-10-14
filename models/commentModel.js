@@ -9,17 +9,17 @@ const commentSchema = mongoose.Schema({
   },
   content: {
     type: String,
-    required: [true, 'A post must have a content.'],
-    maxLength: [200, 'A post content cannot exceeds 200 characters.'],
-    minLength: [3, 'A post content needs to be at least 3 characters.'],
+    required: [true, 'A comment must have a content.'],
+    maxLength: [500, 'A comment cannot exceeds 500 characters.'],
+    minLength: [3, 'A comment needs to be at least 3 characters.'],
   },
   images: {
     type: [String],
     validate: {
       validator: function (val) {
-        val.length <= 5;
+        val.length <= 3;
       },
-      message: 'A comment can only contain 5 images.',
+      message: 'A comment can only contain 3 images.',
     },
   },
   likes: [

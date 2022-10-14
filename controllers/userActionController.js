@@ -1,6 +1,7 @@
 const multer = require('multer');
 const sharp = require('sharp');
 const mkdirp = require('mkdirp');
+const path = require('path');
 
 const Topic = require('../models/topicModel');
 const Post = require('../models/postModel');
@@ -11,13 +12,33 @@ const Major = require('../models/majorModel');
 const AppError = require('../utils/AppError');
 const catchAsync = require('../utils/catchAsync');
 const handlerFactory = require('../controllers/handlerFactory');
+const {
+  moveFile,
+  deleteFiles,
+  moveFileErrorHandler,
+  transferImageAndUpdateDoc,
+} = require('../utils/util');
 
 /////////////////////////
 //////// CREATE /////////
 /////////////////////////
 
+const validateReqImages = (images, next) => {
+  if (images) {
+    if (images.constructor !== Array) {
+      return next(new AppError('Invalid image data', 400));
+    }
+
+    if (images.length > 3) {
+      return next(new AppError('Only 3 images are allowed for now', 400));
+    }
+  }
+};
+
 exports.createPost = catchAsync(async (req, res, next) => {
-  const { topic: topicName, title, content } = req.body;
+  const { topic: topicName, title, content, images: imageNames } = req.body;
+
+  validateReqImages(imageNames, next);
 
   const topic = await Topic.findOne({ name: topicName });
 
@@ -30,7 +51,11 @@ exports.createPost = catchAsync(async (req, res, next) => {
     topic: topic.id,
     title,
     content,
+    images: imageNames || [],
   });
+
+  // If have iamges, move the images from temp_upload to 'postId'
+  await transferImageAndUpdateDoc(newPost, req.user._id, imageNames, 'posts');
 
   // Add reference to user
   await req.user.setReference('posts', 'add', newPost._id);
@@ -40,22 +65,33 @@ exports.createPost = catchAsync(async (req, res, next) => {
 
   res.status(201).json({
     status: 'success',
-    data: newPost,
+    data: {
+      data: newPost,
+    },
   });
 });
 
 exports.createComment = catchAsync(async (req, res, next) => {
-  //author, content, parentComment, fromPost
+  //author, content, parentComment?, fromPost, images?
 
-  const { content, parentComment, fromPost } = req.body;
+  const { content, parentComment, fromPost, images: imageNames } = req.body;
+
+  validateReqImages(imageNames, next);
 
   const commentToCreate = {
     author: req.user.id,
     content,
     fromPost,
+    images: imageNames || [],
   };
 
   if (parentComment) {
+    const pComment = await Comment.findById(parentComment);
+
+    if (!pComment) {
+      return next('Could not find the parent comment', 404);
+    }
+
     commentToCreate.parentComment = parentComment;
   }
 
@@ -69,7 +105,13 @@ exports.createComment = catchAsync(async (req, res, next) => {
 
   const newComment = await Comment.create(commentToCreate);
 
-  console.log(newComment);
+  // If have iamges, move the images from temp_upload to 'postId'
+  await transferImageAndUpdateDoc(
+    newComment,
+    req.user._id,
+    imageNames,
+    'comments'
+  );
 
   // Add reference to post
   post.comments.push(newComment.id);
@@ -82,13 +124,11 @@ exports.createComment = catchAsync(async (req, res, next) => {
     await parentCom.save();
   }
 
-  // Add reference to user
-  req.user.comments.push(newComment.id);
-  await req.user.save();
-
   res.status(201).json({
     status: 'success',
-    data: newComment,
+    data: {
+      data: newComment,
+    },
   });
 });
 
@@ -98,12 +138,18 @@ exports.createComment = catchAsync(async (req, res, next) => {
 
 exports.updatePost = handlerFactory.userUpdateOne(
   Post,
-  true,
+  'post',
   'content',
-  'title'
+  'title',
+  'images'
 );
 
-exports.updateComment = handlerFactory.userUpdateOne(Comment, true, 'content');
+exports.updateComment = handlerFactory.userUpdateOne(
+  Comment,
+  'comment',
+  'content',
+  'images'
+);
 
 /////////////////////////
 //////// DELETE /////////
@@ -127,6 +173,19 @@ exports.deletePost = catchAsync(async (req, res, next) => {
   await topic.setReference('posts', 'remove', post._id);
 
   // TODO: delete the reference from user bookmarks?
+
+  // Delete the post iamges if any
+  if (post.images && post.images.length > 0) {
+    const dir = path.join(
+      global.appRoot,
+      `/public/img/users/${req.user._id}/posts/${post._id}`
+    );
+
+    await deleteFiles(dir, true);
+  }
+
+  // Delete the comments
+  await Comment.deleteMany({ _id: { $in: post.comments } });
 
   // Delete the actual post
   if (topic) {
@@ -152,19 +211,29 @@ exports.deleteComment = catchAsync(async (req, res, next) => {
     await post.setReference('comments', 'remove', comment._id);
   }
 
-  // Delete reference from user
-  await req.user.setReference('comments', 'remove', comment._id);
-
   // Delete reference from parent comment
   if (comment.parentComment) {
     const parentComment = await Comment.find({ _id: comment.parentComment });
     await parentComment.setReference('comments', 'remove', comment._id);
   } */
 
+  // Delete the images if any
+  if (comment.images && comment.images.length > 0) {
+    const dir = path.join(
+      global.appRoot,
+      `/public/img/users/${req.user._id}/comments/${comment._id}`
+    );
+
+    await deleteFiles(dir, true);
+  }
+
   // Delete the actual comment OR disable the comment
   //   await Comment.deleteOne({ _id: comment._id });
-  comment.deleted = true;
-  await comment.save();
+  await Comment.findByIdAndUpdate(comment._id, {
+    content: '',
+    deleted: true,
+    images: [],
+  });
 
   res.status(204).json({
     status: 'success',
@@ -222,9 +291,9 @@ exports.getMyPosts = (type) => {
   return catchAsync(async (req, res, next) => {
     const ids = type === 'bookmark' ? req.user.bookmarks : req.user.posts;
 
-    const posts = await Post.find({ _id: { $in: ids } }).select(
-      '-__v -content -likes -images -comments -id'
-    );
+    const posts = await Post.find({ _id: { $in: ids } })
+      .select('-__v -content -likes -images -comments -id')
+      .sort('-createdAt _id');
 
     res.status(200).json({
       status: 'success',
@@ -255,9 +324,9 @@ const upload = multer({
   fileFilter: multerFilter,
 });
 
-exports.uploadUserPhoto = upload.single('photo');
+exports.uploadImage = upload.single('image');
 
-exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
+exports.resizeImage = catchAsync(async (req, res, next) => {
   if (!req.file) {
     return next();
   }
@@ -337,4 +406,57 @@ exports.updateMe = catchAsync(async (req, res, next) => {
       },
     });
   }
+});
+
+/////////////////////////
+////// UPLOAD IMAGE /////
+/////////////////////////
+
+exports.processImage = catchAsync(async (req, res, next) => {
+  if (!req.file) {
+    return next();
+  }
+
+  let fileName = req.file.originalname.split('.');
+  fileName.pop();
+  fileName = fileName.join('.');
+
+  // const now = new Date();
+  // const timeString = `${now.toLocaleDateString().replace(/\//g, '-')}--${now
+  //   .toLocaleTimeString()
+  //   .replace(/:/g, '-')
+  //   .replace(' ', '')}`;
+
+  fileName = `${req.user._id}-${fileName}-${Date.now()}.webp`;
+
+  await mkdirp(`${appRoot}/public/img/users/${req.user._id}/temp_upload`);
+
+  await sharp(req.file.buffer)
+    .rotate()
+    .resize({
+      fit: 'contain',
+      width: 500,
+    })
+    .toFormat('webp')
+    .webp({ quality: 90 })
+    .toFile(`public/img/users/${req.user._id}/temp_upload/${fileName}`);
+
+  res.status(200).json({
+    message: 'success',
+    path: `img/users/${req.user._id}/temp_upload/${fileName}`,
+  });
+});
+
+exports.deleteTempUpload = catchAsync(async (req, res, next) => {
+  const dir = path.join(
+    global.appRoot,
+    `/public/img/users/${req.user._id}/temp_upload`
+  );
+
+  await deleteFiles(dir, false);
+
+  res.status(200).json({
+    message: 'success',
+    data: null,
+  });
 });

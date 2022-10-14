@@ -2,6 +2,8 @@ const AppError = require('../utils/AppError');
 const catchAsync = require('../utils/catchAsync');
 const QueryDocument = require('../utils/QueryDocument');
 
+const { transferImageAndUpdateDoc, deleteFiles } = require('../utils/util');
+
 exports.getAll = (Model) => {
   return catchAsync(async (req, res, next) => {
     const queryDoc = new QueryDocument(Model.find(), req.query)
@@ -87,19 +89,13 @@ exports.deleteOne = (Model) => {
   });
 };
 
-exports.userUpdateOne = (Model, validateAuthor, ...fields) => {
+exports.userUpdateOne = (Model, type, ...fields) => {
   return catchAsync(async (req, res, next) => {
-    // Check if the current user is trying to modify other user's content --> moved to a middleware
-    /* if (validateAuthor) {
-      const doc = await Model.findOne({ _id: req.params.id });
-
-      if (!doc.sameAuthor(req.user)) {
-        return next(new AppError("Cannot modify other user's post", 401));
-      }
-    } */
+    let imgDirName = `${type}s`;
 
     // Select only the allowed fields from req.body
     const dataToUpdate = {};
+
     fields.forEach((field) => {
       if (req.body[field]) {
         dataToUpdate[field] = req.body[field];
@@ -117,6 +113,17 @@ exports.userUpdateOne = (Model, validateAuthor, ...fields) => {
     }
 
     if (Object.keys(dataToUpdate).length > 1) {
+      const docDir = `${appRoot}/public/img/users/${req.user._id}/${imgDirName}/${doc._id}`;
+
+      await deleteFiles(docDir, false, ...dataToUpdate.images);
+
+      await transferImageAndUpdateDoc(
+        doc,
+        req.user._id,
+        dataToUpdate.images,
+        imgDirName
+      );
+
       if (doc.updateTime) {
         await doc.updateTime();
       }
