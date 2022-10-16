@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const path = require('path');
 const util = require('../utils/util');
 
 const commentSchema = mongoose.Schema({
@@ -99,6 +100,25 @@ commentSchema.pre(/^find/, function (next) {
   /* console.log('I am working');
   const docToUpdate = await this.model.findOne(this.getQuery());
   console.log(docToUpdate); */
+
+  next();
+});
+
+commentSchema.pre(/^delete/, async function (next) {
+  const currentComment = await this.model.findOne(this);
+
+  if (!currentComment) {
+    return next();
+  }
+
+  if (currentComment.images.length > 0) {
+    const dir = path.join(
+      global.appRoot,
+      `/public/img/users/${currentComment.author._id}/comments/${currentComment._id}`
+    );
+
+    await util.deleteFiles(dir, true);
+  }
 
   next();
 });

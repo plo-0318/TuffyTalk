@@ -3,6 +3,11 @@ const path = require('path');
 const morgan = require('morgan');
 const cookierParser = require('cookie-parser');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 
 const globalErrorHandler = require('./controllers/errorController');
 const postRouter = require('./routes/postRoutes');
@@ -23,16 +28,32 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+// Limit request from same API
+const limiter = rateLimit({
+  max: 100,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many requests from this IP, please try again in an hour.',
+});
+// app.use('/api', limiter);
+
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Set security HTTP headers
+app.use(helmet());
+
 app.use(cors({ credentials: true, origin: true }));
-// app.set('trust proxy', 1);
 
 // Body parser
 app.use(express.json({ limit: '10kb' }));
 app.use(cookierParser());
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+// Data sanitization against NoSQL query injection
+app.use(mongoSanitize());
+
+// Data sanitization against XSS
+// app.use(xss());
 
 // Routes
 app.use('/api/v1/posts', postRouter);
@@ -49,8 +70,3 @@ app.use('*', (req, res, next) => {
 app.use(globalErrorHandler);
 
 module.exports = app;
-
-/*
-TODO:
-add security stuff
-*/

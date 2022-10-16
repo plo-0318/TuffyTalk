@@ -4,6 +4,8 @@ const authController = require('../controllers/authController');
 
 const router = express.Router();
 
+router.route('/search').get(postController.searchPost);
+
 router
   .route('/')
   .get(postController.getAllPosts)

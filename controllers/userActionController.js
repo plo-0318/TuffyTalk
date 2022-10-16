@@ -172,7 +172,7 @@ exports.deletePost = catchAsync(async (req, res, next) => {
   // Delete reference from topic
   await topic.setReference('posts', 'remove', post._id);
 
-  // TODO: delete the reference from user bookmarks?
+  // TODO: delete the reference from user bookmarks
 
   // Delete the post iamges if any
   if (post.images && post.images.length > 0) {
