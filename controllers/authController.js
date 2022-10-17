@@ -34,16 +34,17 @@ createSendToken = (user, statusCode, req, res) => {
   };
 
   // For heroku
-  if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
-    cookieOptions.secure = true;
-    cookieOptions.sameSite = 'none';
-  }
-
-  //TODO: UNCOMMENT THIS FOR PRODUCTION ?
-  // if (process.env.NODE_ENV === 'production') {
+  // if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
   //   cookieOptions.secure = true;
   //   cookieOptions.sameSite = 'none';
   // }
+
+  // For safari
+  if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
+    cookieOptions.secure = true;
+    cookieOptions.domain = 'tuffytalk.herokuapp.com';
+    cookieOptions.sameSite = 'lax';
+  }
 
   res.cookie('jwt', token, cookieOptions);
 
@@ -100,9 +101,16 @@ exports.logout = (req, res) => {
   };
 
   // For heroku
+  // if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
+  //   cookieOptions.secure = true;
+  //   cookieOptions.sameSite = 'none';
+  // }
+
+  // For safari
   if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
     cookieOptions.secure = true;
-    cookieOptions.sameSite = 'none';
+    cookieOptions.domain = 'tuffytalk.herokuapp.com';
+    cookieOptions.sameSite = 'lax';
   }
 
   res.cookie('jwt', 'loggedout', cookieOptions);
