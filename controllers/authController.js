@@ -102,7 +102,8 @@ exports.logout = (req, res) => {
   // For heroku
   if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
     cookieOptions.secure = true;
-    coo
+    cookieOptions.sameSite = 'none';
+  }
 
   res.cookie('jwt', 'loggedout', cookieOptions);
 
