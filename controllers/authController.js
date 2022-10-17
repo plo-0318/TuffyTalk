@@ -19,7 +19,7 @@ const signToken = (id) => {
   return token;
 };
 
-createSendToken = (user, statusCode, res) => {
+createSendToken = (user, statusCode, req, res) => {
   const token = signToken(user._id);
 
   const expires = new Date(
@@ -33,7 +33,13 @@ createSendToken = (user, statusCode, res) => {
     secure: false,
   };
 
-  //TODO: UNCOMMENT THIS FOR PRODUCTION
+  // For heroku
+  if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
+    cookieOptions.secure = true;
+    cookieOptions.sameSite = 'none';
+  }
+
+  //TODO: UNCOMMENT THIS FOR PRODUCTION ?
   // if (process.env.NODE_ENV === 'production') {
   //   cookieOptions.secure = true;
   //   cookieOptions.sameSite = 'none';
@@ -72,7 +78,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   // 3) If all good, send token
-  createSendToken(user, 200, res);
+  createSendToken(user, 200, req, res);
 });
 
 exports.signup = catchAsync(async (req, res, next) => {
@@ -80,7 +86,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 
   const user = await User.create({ username, email, password });
 
-  createSendToken(user, 201, res);
+  createSendToken(user, 201, req, res);
 });
 
 exports.logout = (req, res) => {
@@ -215,7 +221,7 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   await user.save();
 
   // 4) Log user in, send jwt
-  createSendToken(user, 200, res);
+  createSendToken(user, 200, req, res);
 });
 
 exports.forgotPassword = catchAsync(async (req, res, next) => {
@@ -246,8 +252,6 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     user.passwordResetToken = undefined;
     user.passwordResetTokenExpiresIn = undefined;
     await user.save({ validateBeforeSave: false });
-
-    console.log(err.message);
 
     return next(
       new AppError(
@@ -282,7 +286,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   await user.save();
 
   // 3) Log the user in, send JWT
-  createSendToken(user, 200, res);
+  createSendToken(user, 200, req, res);
 });
 
 exports.validateSameAuthor = (Model) => {

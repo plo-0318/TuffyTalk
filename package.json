@@ -1,10 +1,11 @@
 {
-  "name": "project",
-  "version": "1.0.0",
+  "name": "tuffy-talk",
+  "version": "0.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon server.js",
+    "start": "node server.js",
+    "start:dev": "nodemon server.js",
     "start:prod": "SET NODE_ENV=production&&nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,6 +16,7 @@
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
+    "compression": "^1.7.4",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
@@ -32,5 +34,8 @@
     "nodemailer": "^6.7.8",
     "sharp": "^0.31.1",
     "xss-clean": "^0.1.1"
+  },
+  "engines": {
+    "node": "^16"
   }
 }

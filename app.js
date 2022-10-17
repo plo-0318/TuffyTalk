@@ -8,6 +8,7 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const compression = require('compression');
 
 const globalErrorHandler = require('./controllers/errorController');
 const postRouter = require('./routes/postRoutes');
@@ -19,6 +20,7 @@ const userActionRouter = require('./routes/userActionRoutes');
 const AppError = require('./utils/AppError');
 
 const app = express();
+app.enable('trust proxy');
 
 // Storing the root path in global variable
 global.appRoot = path.resolve(__dirname);
@@ -28,21 +30,23 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+// CORS
+app.use(cors({ credentials: true, origin: true }));
+app.options('*', cors());
+
 // Limit request from same API
 const limiter = rateLimit({
   max: 100,
   windowMs: 60 * 60 * 1000,
   message: 'Too many requests from this IP, please try again in an hour.',
 });
-// app.use('/api', limiter);
+// app.use('/api', limiter);  //TODO: enable for prod?
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Set security HTTP headers
 app.use(helmet());
-
-app.use(cors({ credentials: true, origin: true }));
 
 // Body parser
 app.use(express.json({ limit: '10kb' }));
@@ -54,6 +58,9 @@ app.use(mongoSanitize());
 
 // Data sanitization against XSS
 // app.use(xss());
+
+// Compression
+app.use(compression());
 
 // Routes
 app.use('/api/v1/posts', postRouter);
