@@ -42,8 +42,8 @@ createSendToken = (user, statusCode, req, res) => {
   // For safari
   if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
     cookieOptions.secure = true;
-    cookieOptions.domain = 'tuffytalk.herokuapp.com';
-    cookieOptions.sameSite = 'none';
+    cookieOptions.domain = '.tuffytalk.herokuapp.com';
+    cookieOptions.sameSite = 'lax';
   }
 
   res.cookie('jwt', token, cookieOptions);
@@ -109,7 +109,7 @@ exports.logout = (req, res) => {
   // For safari
   if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
     cookieOptions.secure = true;
-    cookieOptions.domain = 'tuffytalk.herokuapp.com';
+    cookieOptions.domain = '.tuffytalk.herokuapp.com';
     cookieOptions.sameSite = 'lax';
   }
 
