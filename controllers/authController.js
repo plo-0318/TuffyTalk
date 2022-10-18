@@ -34,17 +34,17 @@ createSendToken = (user, statusCode, req, res) => {
   };
 
   // For heroku
-  // if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
-  //   cookieOptions.secure = true;
-  //   cookieOptions.sameSite = 'none';
-  // }
-
-  // For safari
   if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
     cookieOptions.secure = true;
-    cookieOptions.domain = 'tuffytalk.herokuapp.com';
     cookieOptions.sameSite = 'none';
   }
+
+  // For safari
+  // if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
+  //   cookieOptions.secure = true;
+  //   cookieOptions.domain = 'tuffytalk.herokuapp.com';
+  //   cookieOptions.sameSite = 'none';
+  // }
 
   res.cookie('jwt', token, cookieOptions);
 
