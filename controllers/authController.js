@@ -100,7 +100,7 @@ exports.logout = (req, res) => {
     secure: false,
   };
 
-  For heroku
+  //For heroku
   if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
     cookieOptions.secure = true;
     cookieOptions.sameSite = 'none';
