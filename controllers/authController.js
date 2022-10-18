@@ -37,6 +37,7 @@ createSendToken = (user, statusCode, req, res) => {
   if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
     cookieOptions.secure = true;
     cookieOptions.sameSite = 'none';
+    cookieOptions.domain = 'tuffytalk.herokuapp.com';
   }
 
   // For safari
