@@ -36,7 +36,7 @@ createSendToken = (user, statusCode, req, res) => {
   // For heroku
   if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
     cookieOptions.secure = true;
-    cookieOptions.sameSite = 'lax';
+    cookieOptions.sameSite = 'none';
   }
 
   // For safari
