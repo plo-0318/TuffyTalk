@@ -453,6 +453,8 @@ exports.deleteTempUpload = catchAsync(async (req, res, next) => {
     `/public/img/users/${req.user._id}/temp_upload`
   );
 
+  console.log(dir);
+
   await deleteFiles(dir, false);
 
   res.status(200).json({

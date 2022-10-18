@@ -119,6 +119,9 @@ exports.transferImageAndUpdateDoc = async (
 
 exports.deleteFiles = async (dir, removeDir, ...exclude) => {
   let files;
+
+  console.log('h1');
+
   try {
     files = await fsp.readdir(dir);
   } catch (err) {
@@ -129,13 +132,19 @@ exports.deleteFiles = async (dir, removeDir, ...exclude) => {
     throw new Error(err);
   }
 
+  console.log('h2');
+
   for (const file of files) {
     if (!exclude.includes(file)) {
       await fsp.unlink(path.join(dir, file));
     }
   }
 
+  console.log('h3');
+
   if (removeDir) {
     await fsp.rmdir(dir);
   }
+
+  console.log('h4');
 };
