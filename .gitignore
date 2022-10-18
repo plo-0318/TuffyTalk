@@ -26,3 +26,5 @@ config.env
 *.prettierrc
 
 package-lock.json
+
+client_dev/

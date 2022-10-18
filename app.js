@@ -31,17 +31,17 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // CORS
-app.use(function (req, res, next) {
-  res.set('credentials', 'include');
-  res.set('Access-Control-Allow-Credentials', true);
-  res.set('Access-Control-Allow-Origin', req.headers.origin);
-  res.set('Access-Control-Allow-Methods', 'GET,POST,DELETE,PATCH');
-  res.set(
-    'Access-Control-Allow-Headers',
-    'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept'
-  );
-  next();
-});
+// app.use(function (req, res, next) {
+//   res.set('credentials', 'include');
+//   res.set('Access-Control-Allow-Credentials', true);
+//   res.set('Access-Control-Allow-Origin', req.headers.origin);
+//   res.set('Access-Control-Allow-Methods', 'GET,POST,DELETE,PATCH');
+//   res.set(
+//     'Access-Control-Allow-Headers',
+//     'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept'
+//   );
+//   next();
+// });
 
 app.use(cors({ credentials: true, origin: true }));
 app.options('*', cors());
@@ -58,7 +58,12 @@ const limiter = rateLimit({
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Set security HTTP headers
-app.use(helmet());
+// app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+  })
+);
 
 // Body parser
 app.use(express.json({ limit: '10kb' }));
@@ -81,8 +86,16 @@ app.use('/api/v1/majors', majorRouter);
 app.use('/api/v1/comments', commentRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/user-actions', userActionRouter);
-app.use('*', (req, res, next) => {
+app.use('/api/*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
+});
+
+app.get('/*', function (req, res) {
+  res.sendFile(path.join(__dirname, 'public/index.html'), function (err) {
+    if (err) {
+      res.status(500).send(err);
+    }
+  });
 });
 
 // Global error handler
