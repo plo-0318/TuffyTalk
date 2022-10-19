@@ -27,9 +27,9 @@ app.enable('trust proxy');
 global.appRoot = path.resolve(__dirname);
 
 // Logging http request in development
-// if (process.env.NODE_ENV === 'development') {
-//   app.use(morgan('dev'));
-// }
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+}
 
 // CORS
 // app.use(function (req, res, next) {
@@ -59,12 +59,12 @@ const limiter = rateLimit({
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Set security HTTP headers
-// app.use(helmet());
-app.use(
-  helmet({
-    contentSecurityPolicy: false,
-  })
-);
+app.use(helmet());
+// app.use(
+//   helmet({
+//     contentSecurityPolicy: false,
+//   })
+// );
 
 // Body parser
 app.use(express.json({ limit: '10kb' }));
