@@ -36,15 +36,15 @@ const topicSchema = mongoose.Schema({
 /////////////////////////
 
 // Popultate referenced fields
-topicSchema.pre(/^find/, function (next) {
-  this.populate({
-    path: 'posts',
-    select:
-      '-topic -__v -images -likes -content -createdAt -updatedAt -modified',
-  });
+// topicSchema.pre(/^find/, function (next) {
+//   this.populate({
+//     path: 'posts',
+//     select:
+//       '-topic -__v -images -likes -content -createdAt -updatedAt -modified',
+//   });
 
-  next();
-});
+//   next();
+// });
 
 /////////////////////////
 /// INSTANCE METHODS ////

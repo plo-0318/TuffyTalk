@@ -59,10 +59,10 @@ const sendErrorProd = (err, req, res) => {
 const globalErrorHandler = (err, req, res, next) => {
   let error = { ...err };
 
-  // console.log('\n');
-  // console.log('🤬🤬🤬🤬🤬', err.name);
-  // console.log(err);
-  // console.log('\n');
+  console.log('\n');
+  console.log('🤬🤬🤬🤬🤬', err.name);
+  console.log(err);
+  console.log('\n');
 
   error.statusCode = error.statusCode || 500;
   error.status = error.status || 'ERROR';

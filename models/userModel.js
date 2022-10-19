@@ -18,6 +18,12 @@ function validateEmail(val) {
   return val.toLowerCase().match(re);
 }
 
+// const profilePictureSchema = mongoose.Schema({
+//   data: { type: Buffer, default: null },
+//   type: { type: String, default: 'image/png' },
+//   name: { type: String, default: 'user-placeholder.png' },
+// });
+
 const userSchema = mongoose.Schema({
   username: {
     type: String,
@@ -50,9 +56,15 @@ const userSchema = mongoose.Schema({
         'Password needs to contain at least 1 character and at least 1 number',
     },
   },
+  // profilePicture: {
+  //   data: { type: Buffer, default: null },
+  //   type: { type: String, default: 'image/png' },
+  //   name: { type: String, default: 'user-placeholder.png' },
+  // },
   profilePicture: {
-    type: String,
-    default: 'user-placeholder.png',
+    type: mongoose.Schema.ObjectId,
+    ref: 'UserImage',
+    default: '634f8b0cc19a15d06837db4b',
   },
   gender: {
     type: String,
@@ -117,11 +129,9 @@ userSchema.pre('save', async function (next) {
 
 // Popultate referenced fields
 userSchema.pre(/^find/, function (next) {
-  /* this.populate({
-    path: 'bookmarks',
-    // select: '',
-  })
- */
+  this.populate({
+    path: 'profilePicture',
+  });
 
   next();
 });

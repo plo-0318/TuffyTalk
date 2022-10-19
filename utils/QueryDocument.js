@@ -12,7 +12,7 @@ class QueryDocument {
 
   filter() {
     const queryObj = { ...this.queryString };
-    const excludedFields = ['page', 'sort', 'limit', 'field'];
+    const excludedFields = ['page', 'sort', 'limit', 'fields'];
 
     excludedFields.forEach((field) => delete queryObj[field]);
 
@@ -46,7 +46,7 @@ class QueryDocument {
 
   limitFields() {
     if (this.queryString.fields) {
-      const fields = this.queryString.split(',').join(' ');
+      const fields = this.queryString.fields.split(',').join(' ');
 
       this.query = this.query.select(fields);
     } else {

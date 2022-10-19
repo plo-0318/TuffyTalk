@@ -17,6 +17,7 @@ const topicRouter = require('./routes/topicRoutes');
 const commentRouter = require('./routes/commentRoutes');
 const userRouter = require('./routes/userRoutes');
 const userActionRouter = require('./routes/userActionRoutes');
+const userImageRouter = require('./routes/userImageRoutes');
 const AppError = require('./utils/AppError');
 
 const app = express();
@@ -26,9 +27,9 @@ app.enable('trust proxy');
 global.appRoot = path.resolve(__dirname);
 
 // Logging http request in development
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
-}
+// if (process.env.NODE_ENV === 'development') {
+//   app.use(morgan('dev'));
+// }
 
 // CORS
 // app.use(function (req, res, next) {
@@ -86,6 +87,7 @@ app.use('/api/v1/majors', majorRouter);
 app.use('/api/v1/comments', commentRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/user-actions', userActionRouter);
+app.use('/api/v1/images', userImageRouter);
 app.use('/api/*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
 });

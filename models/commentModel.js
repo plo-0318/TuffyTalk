@@ -104,20 +104,20 @@ commentSchema.pre(/^find/, function (next) {
   next();
 });
 
-commentSchema.pre(/^delete/, async function (next) {
-  const currentComment = await this.model.findOne(this);
+commentSchema.pre('deleteMany', async function (next) {
+  const commentsToDelete = await this.model.find(this._conditions);
 
-  if (!currentComment) {
-    return next();
-  }
+  for (const comment of commentsToDelete) {
+    if (comment.images.length > 0) {
+      // const dir = path.join(
+      //   global.appRoot,
+      //   `/public/img/users/${currentComment.author._id}/comments/${currentComment._id}`
+      // );
 
-  if (currentComment.images.length > 0) {
-    const dir = path.join(
-      global.appRoot,
-      `/public/img/users/${currentComment.author._id}/comments/${currentComment._id}`
-    );
+      // await util.deleteFiles(dir, true);
 
-    await util.deleteFiles(dir, true);
+      await util.deleteImagesFromDb(comment.content, (id) => true);
+    }
   }
 
   next();

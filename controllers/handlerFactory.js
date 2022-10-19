@@ -2,7 +2,10 @@ const AppError = require('../utils/AppError');
 const catchAsync = require('../utils/catchAsync');
 const QueryDocument = require('../utils/QueryDocument');
 
-const { transferImageAndUpdateDoc, deleteFiles } = require('../utils/util');
+const {
+  uploadImageToDbAndUpdateDoc,
+  deleteImagesFromDb,
+} = require('../utils/util');
 
 exports.getAll = (Model) => {
   return catchAsync(async (req, res, next) => {
@@ -91,8 +94,6 @@ exports.deleteOne = (Model) => {
 
 exports.userUpdateOne = (Model, type, ...fields) => {
   return catchAsync(async (req, res, next) => {
-    let imgDirName = `${type}s`;
-
     // Select only the allowed fields from req.body
     const dataToUpdate = {};
 
@@ -102,37 +103,50 @@ exports.userUpdateOne = (Model, type, ...fields) => {
       }
     });
 
-    // Find and update document
-    const doc = await Model.findByIdAndUpdate(req.params.id, dataToUpdate, {
-      new: true,
-      runValidators: true,
-    });
+    const doc = await Model.findById(req.params.id);
 
     if (!doc) {
       return next(new AppError('Could not find a document with this ID', 404));
     }
 
-    if (Object.keys(dataToUpdate).length > 1) {
-      const docDir = `${appRoot}/public/img/users/${req.user._id}/${imgDirName}/${doc._id}`;
+    // if (Object.keys(dataToUpdate).length < 1) {
+    //   res.status(200).json({
+    //     status: 'success',
+    //     data: {
+    //       data: doc,
+    //     },
+    //   });
+    // }
 
-      await deleteFiles(docDir, false, ...dataToUpdate.images);
+    const newDoc = await Model.findByIdAndUpdate(req.params.id, dataToUpdate, {
+      new: true,
+      runValidators: true,
+    });
 
-      await transferImageAndUpdateDoc(
-        doc,
+    if (dataToUpdate.images.length > 0) {
+      await uploadImageToDbAndUpdateDoc(
+        newDoc,
         req.user._id,
         dataToUpdate.images,
-        imgDirName
+        doc.content
       );
-
-      if (doc.updateTime) {
-        await doc.updateTime();
-      }
     }
+
+    if (newDoc.updateTime) {
+      await newDoc.updateTime();
+    }
+
+    const shouldDelete =
+      dataToUpdate.images?.length > 0
+        ? (id) => !dataToUpdate.images.includes(id)
+        : () => true;
+
+    await deleteImagesFromDb(doc.content, shouldDelete);
 
     res.status(200).json({
       status: 'success',
       data: {
-        data: doc,
+        data: newDoc,
       },
     });
   });
