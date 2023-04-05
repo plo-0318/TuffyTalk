@@ -104,3 +104,6 @@ app.get('*', function (req, res) {
 app.use(globalErrorHandler);
 
 module.exports = app;
+
+// TODO: deleting post --> remove savedPost references
+// TODO: delete post --> delete comment --> remove likedComment references

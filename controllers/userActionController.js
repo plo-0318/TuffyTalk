@@ -20,6 +20,7 @@ const {
   deleteImagesFromDb,
   uploadImageToDbAndUpdateDoc,
 } = require('../utils/util');
+const SavedPost = require('../models/savedPost');
 
 /////////////////////////
 //////// CREATE /////////
@@ -42,6 +43,7 @@ exports.createPost = catchAsync(async (req, res, next) => {
 
   validateReqImages(imageNames, next);
 
+  // See if the topic exists. If not, return error
   const topic = await Topic.findOne({ name: topicName });
 
   if (!topic) {
@@ -59,12 +61,6 @@ exports.createPost = catchAsync(async (req, res, next) => {
   // If have iamges, move the images from temp_upload to 'postId'
   // await transferImageAndUpdateDoc(newPost, req.user._id, imageNames, 'posts');
   await uploadImageToDbAndUpdateDoc(newPost, req.user._id, imageNames);
-
-  // Add reference to user
-  await req.user.setReference('posts', 'add', newPost._id);
-
-  // Add reference to topic
-  await topic.setReference('posts', 'add', newPost._id);
 
   res.status(201).json({
     status: 'success',
@@ -88,8 +84,10 @@ exports.createComment = catchAsync(async (req, res, next) => {
     images: imageNames || [],
   };
 
+  let pComment = null;
+
   if (parentComment) {
-    const pComment = await Comment.findById(parentComment);
+    pComment = await Comment.findById(parentComment);
 
     if (!pComment) {
       return next('Could not find the parent comment', 404);
@@ -98,6 +96,7 @@ exports.createComment = catchAsync(async (req, res, next) => {
     commentToCreate.parentComment = parentComment;
   }
 
+  // See if the post exists. If not, return error
   const post = await Post.findOne({ _id: fromPost });
 
   if (!post) {
@@ -117,15 +116,8 @@ exports.createComment = catchAsync(async (req, res, next) => {
   // );
   await uploadImageToDbAndUpdateDoc(newComment, req.user._id, imageNames);
 
-  // Add reference to post
-  post.comments.push(newComment.id);
-  await post.save();
-
-  // Add reference to parent comment if any
-  if (parentComment) {
-    const parentCom = await Comment.findOne({ _id: parentComment });
-    parentCom.comments.push(newComment.id);
-    await parentCom.save();
+  if (pComment) {
+    await pComment.setReference('comments', 'add', newComment._id);
   }
 
   res.status(201).json({
@@ -160,6 +152,8 @@ exports.updateComment = handlerFactory.userUpdateOne(
 /////////////////////////
 
 exports.deletePost = catchAsync(async (req, res, next) => {
+  //TODO: consider setting the post inactive?
+
   //   const post = await Post.findOne({ _id: req.params.id }).select('_id');
   // req.doc comes from validateAuthor middleware
   const post = req.doc;
@@ -167,16 +161,6 @@ exports.deletePost = catchAsync(async (req, res, next) => {
   if (!post) {
     return next(new AppError('Could not find a post with this id', 404));
   }
-
-  const topic = await Topic.findById(req.doc.topic._id);
-
-  // Delete reference from user
-  await req.user.setReference('posts', 'remove', post._id);
-
-  // Delete reference from topic
-  await topic.setReference('posts', 'remove', post._id);
-
-  // TODO: delete the reference from user bookmarks
 
   // Delete the post iamges if any
   if (post.images && post.images.length > 0) {
@@ -190,8 +174,7 @@ exports.deletePost = catchAsync(async (req, res, next) => {
     await deleteImagesFromDb(post.content, (id) => true);
   }
 
-  // Delete the comments
-  await Comment.deleteMany({ _id: { $in: post.comments } });
+  //TODO: delete the comments in the post
 
   // Delete the actual post
   if (topic) {
@@ -210,18 +193,6 @@ exports.deleteComment = catchAsync(async (req, res, next) => {
   if (!comment) {
     return next(new AppError('Could not find a comment with this id', 404));
   }
-
-  /*  // Delete reference from post
-  if (comment.fromPost) {
-    const post = await Post.findOne({ _id: comment.fromPost._id });
-    await post.setReference('comments', 'remove', comment._id);
-  }
-
-  // Delete reference from parent comment
-  if (comment.parentComment) {
-    const parentComment = await Comment.find({ _id: comment.parentComment });
-    await parentComment.setReference('comments', 'remove', comment._id);
-  } */
 
   // Delete the images if any
   if (comment.images && comment.images.length > 0) {
@@ -253,59 +224,115 @@ exports.deleteComment = catchAsync(async (req, res, next) => {
 //////// TOGGLE /////////
 /////////////////////////
 
-exports.toggleLike = (model) => {
+exports.constructToggleQuery = (docType, postType) => {
   return catchAsync(async (req, res, next) => {
+    const docTypeLower = docType.toLowerCase();
     const { id } = req.params;
 
-    const doc = await model.findById(id);
+    if (docTypeLower === 'comment') {
+      const commentDoc = await Comment.findById(id);
 
-    if (!doc) {
-      return next(new AppError('No document found with this id', 404));
+      if (!commentDoc) {
+        return next(new AppError('This comment does not exist', 404));
+      }
+
+      req.toggleQuery = {
+        user: req.user.id,
+        comment: id,
+        commentCreatedAt: commentDoc.createdAt,
+      };
+
+      return next();
     }
 
-    await doc.setReference('likes', 'toggle', req.user._id);
+    if (docTypeLower === 'post') {
+      const allowedFields = ['bookmark', 'like'];
+
+      if (!allowedFields.includes(postType.toLowerCase())) {
+        return next(new AppError('Invalid post type', 401));
+      }
+
+      const postDoc = await Post.findById(id);
+
+      if (!postDoc) {
+        return next(new AppError('This post does not exist', 404));
+      }
+
+      req.toggleQuery = {
+        user: req.user.id,
+        type: postType.toLowerCase(),
+        post: id,
+        postCreatedAt: postDoc.createdAt,
+      };
+
+      return next();
+    }
+
+    return next(new AppError('Invalid document type', 401));
+  });
+};
+
+exports.toggleDoc = (model) => {
+  return catchAsync(async (req, res, next) => {
+    const query = req.toggleQuery;
+
+    const doc = await model.findOne(query);
+    let newDoc = null;
+
+    if (!doc) {
+      newDoc = await model.create(query);
+    } else {
+      await model.findByIdAndDelete(doc._id);
+    }
 
     res.status(200).json({
-      status: 'sucess',
+      status: 'success',
       data: {
-        data: doc,
+        data: newDoc,
       },
     });
   });
 };
 
-exports.toggleBookmark = catchAsync(async (req, res, next) => {
-  const { postId } = req.body;
-
-  const user = await User.findById(req.user.id);
-
-  await user.setReference('bookmarks', 'toggle', postId);
-
-  req.user = user;
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      data: user,
-    },
-  });
-});
-
 /////////////////////////
 ////////// GET //////////
 /////////////////////////
 
-exports.getMyPosts = (type) => {
+exports.getUserPosts = () => {
   return catchAsync(async (req, res, next) => {
-    const ids = type === 'bookmark' ? req.user.bookmarks : req.user.posts;
-
-    const posts = await Post.find({ _id: { $in: ids } })
-      .select('-__v -content -likes -images -comments -id')
+    const posts = await Post.find({ author: req.user.id })
+      .select('-__v -content -likes -images -comments -id -author')
       .sort('-createdAt _id');
 
     res.status(200).json({
       status: 'success',
       length: posts.length,
+      data: {
+        data: posts,
+      },
+    });
+  });
+};
+
+exports.getSavedPosts = (type) => {
+  return catchAsync(async (req, res, next) => {
+    const allowedTypes = ['bookmark', 'like'];
+
+    const postType = type.toLowerCase();
+
+    if (!allowedTypes.includes(postType)) {
+      return next(new AppError('Invalid post type', 401));
+    }
+
+    const posts = await SavedPost.find({
+      user: req.user.id,
+      type: postType,
+    })
+      .select('-__v -user -_id -createdAt -type')
+      .sort('-createdAt _id');
+
+    res.status(200).json({
+      status: 'success',
       data: {
         data: posts,
       },

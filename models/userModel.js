@@ -74,18 +74,6 @@ const userSchema = mongoose.Schema({
       messages: "A user's gender is either male, female, or noPref",
     },
   },
-  bookmarks: [
-    {
-      type: mongoose.Schema.ObjectId,
-      ref: 'Post',
-    },
-  ],
-  posts: [
-    {
-      type: mongoose.Schema.ObjectId,
-      ref: 'Post',
-    },
-  ],
   role: {
     type: String,
     default: 'user',

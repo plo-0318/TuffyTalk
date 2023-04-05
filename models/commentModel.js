@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const path = require('path');
 const util = require('../utils/util');
+const LikedComment = require('./likedComment');
 
 const commentSchema = mongoose.Schema({
   author: {
@@ -23,15 +23,6 @@ const commentSchema = mongoose.Schema({
       message: 'A comment can only contain 3 images.',
     },
   },
-  likes: [
-    {
-      type: mongoose.Schema.ObjectId,
-      ref: 'User',
-    },
-  ],
-  comments: [
-    { type: mongoose.Schema.ObjectId, ref: 'Comment', required: false },
-  ],
   parentComment: {
     type: mongoose.Schema.ObjectId,
     ref: 'Comment',
@@ -42,6 +33,16 @@ const commentSchema = mongoose.Schema({
     ref: 'Post',
     required: [true, 'A comment must belong to a post.'],
   },
+  numLikes: {
+    type: Number,
+    default: 0,
+  },
+  comments: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Comment',
+    },
+  ],
   createdAt: {
     type: Date,
     default: new Date(),
@@ -100,6 +101,18 @@ commentSchema.pre(/^find/, function (next) {
   /* console.log('I am working');
   const docToUpdate = await this.model.findOne(this.getQuery());
   console.log(docToUpdate); */
+
+  next();
+});
+
+commentSchema.post(/^find/, async function (doc, next) {
+  if (!doc) {
+    return next();
+  }
+
+  const likedComments = await LikedComment.find({ comment: doc.id });
+
+  doc.numLikes = likedComments.length;
 
   next();
 });
@@ -170,6 +183,9 @@ commentSchema.post('findOneAndDelete', async function () {
 commentSchema.methods.sameAuthor = util.sameAuthor;
 commentSchema.methods.setReference = util.setReference;
 commentSchema.methods.updateTime = util.updateTime;
+
+commentSchema.index({ fromPost: 1 });
+commentSchema.index({ parentComment: 1 });
 
 const Comment = mongoose.model('Comment', commentSchema);
 

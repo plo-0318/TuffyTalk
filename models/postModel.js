@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const SavedPost = require('../models/savedPost');
+const Comment = require('../models/commentModel');
 const util = require('../utils/util');
 
 const postSchema = mongoose.Schema(
@@ -35,19 +37,14 @@ const postSchema = mongoose.Schema(
       ref: 'User',
       required: [true, 'A post must have an author'],
     },
-    likes: [
-      {
-        type: mongoose.Schema.ObjectId,
-        ref: 'User',
-      },
-    ],
-    comments: [
-      {
-        type: mongoose.Schema.ObjectId,
-        ref: 'Comment',
-        required: false,
-      },
-    ],
+    numLikes: {
+      type: Number,
+      default: 0,
+    },
+    numComments: {
+      type: Number,
+      default: 0,
+    },
     createdAt: {
       type: Date,
       default: Date.now(),
@@ -66,13 +63,15 @@ const postSchema = mongoose.Schema(
 // VIRTUAL PROPERTIES ///
 /////////////////////////
 
-postSchema.virtual('numLikes').get(function () {
-  if (this.likes) {
-    return this.likes.length;
-  }
+// postSchema.virtual('numLikes').get(function () {
+//   let len = 0;
 
-  return 0;
-});
+//   SavedPost.find({ post: this.id }, (error, docs) => {
+//     len = docs.length;
+//   });
+
+//   return len;
+// });
 
 /////////////////////////
 // DOCUMENT MIDDLEWARE///
@@ -93,10 +92,20 @@ postSchema.pre(/^find/, function (next) {
     select:
       '-email -password -bookmarks -likedPosts -posts -comments -role -createdAt -updatedAt -passwordChangedAt -passwordResetToken -passwordResetTokenExpiresIn -__v',
   });
-  // .populate({
-  //   path: 'comments',
-  //   select: '-__v -_id -comments -parentComment -fromPost',
-  // });
+
+  next();
+});
+
+postSchema.post(/^find/, async function (doc, next) {
+  if (!doc) {
+    return next();
+  }
+
+  const likedPosts = await SavedPost.find({ post: doc.id, type: 'like' });
+  const comments = await Comment.find({ fromPost: doc.id });
+
+  doc.numLikes = likedPosts.length;
+  doc.numComments = comments.length;
 
   next();
 });

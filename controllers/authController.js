@@ -178,7 +178,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   if (!token || token === 'null') {
-    return next(new AppError('You are not logged in. Login to cotinue.', 401));
+    return next(new AppError('You are not logged in. Login to continue.', 401));
   }
 
   // 2) Validate token
