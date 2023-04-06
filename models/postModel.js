@@ -101,11 +101,23 @@ postSchema.post(/^find/, async function (doc, next) {
     return next();
   }
 
-  const likedPosts = await SavedPost.find({ post: doc.id, type: 'like' });
-  const comments = await Comment.find({ fromPost: doc.id });
+  const populateLikesAndComments = async (postDoc) => {
+    const likedPosts = await SavedPost.find({ post: postDoc.id, type: 'like' });
+    const comments = await Comment.find({ fromPost: postDoc.id });
 
-  doc.numLikes = likedPosts.length;
-  doc.numComments = comments.length;
+    postDoc.numLikes = likedPosts.length;
+    postDoc.numComments = comments.length;
+  };
+
+  if (Array.isArray(doc)) {
+    for (let i = 0; i < doc.length; i++) {
+      await populateLikesAndComments(doc[i]);
+    }
+  } else {
+    await populateLikesAndComments(doc);
+  }
+
+  console.log(doc);
 
   next();
 });
